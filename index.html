@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справочник ОКВЭД2 — бесплатный онлайн-поиск кодов видов деятельности</title>
+    <meta name="description" content="Быстрый и удобный поиск по ОКВЭД2 (ОК 029-2014). Находите коды видов экономической деятельности для регистрации бизнеса, статистики, бухгалтерии. Полная база: 2929 записей.">
+    <meta name="keywords" content="ОКВЭД2, классификатор видов деятельности, коды ОКВЭД2, поиск ОКВЭД2, ОК 029-2014, регистрация ИП, ООО, виды деятельности">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🏢 Интерактивный справочник ОКВЭД2</h1>
+        <div class="header-description">
+            <p><strong>Общероссийский классификатор видов экономической деятельности (ОК 029-2014)</strong></p>
+            <p>Используется для государственной регистрации юридических лиц и индивидуальных предпринимателей, статистического наблюдения, анализа и прогнозирования социально-экономического развития. Основан на европейской классификации NACE Rev. 2. <a href="https://ru.wikipedia.org/wiki/Общероссийский_классификатор_видов_экономической_деятельности" target="_blank" rel="noopener noreferrer">Подробнее в Википедии</a>.</p>
+            <p class="header-note">В справочнике актуальная база из 2929 записей. Данные обновляются с <a href="https://classifikators.ru/okved" target="_blank" rel="noopener noreferrer">официальных источников</a>.</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Поле для поиска -->
+        <div class="search-container">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Введите код (56.10.1) или вид деятельности (Кафе, ресторан)..."
+                aria-label="Поле для поиска по справочнику ОКВЭД2"
+            >
+            <div class="hint">
+                Поиск запустится автоматически при вводе.
+            </div>
+            
+            <!-- Блок популярных запросов (опционально, можно добавить позже) -->
+            <div class="popular-queries">
+                <div class="hint">
+                    Популярные запросы: <span class="query-tag">кафе</span>, <span class="query-tag">строительство</span>, <span class="query-tag">перевозки</span>, <span class="query-tag">розничная торговля</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Информационный блок перед результатами -->
+        <div class="info-block">
+            <details>
+                <summary><strong>📋 Как пользоваться справочником:</strong></summary>
+                <ul>
+                    <li><strong>Поиск по коду:</strong> Введите код полностью (56.10) или частично (56)</li>
+                    <li><strong>Поиск по названию:</strong> Введите одно или несколько слов (кафе ресторан)</li>
+                    <li><strong>Копирование:</strong> Кликните на код для копирования в буфер обмена</li>
+                    <li><strong>Навигация:</strong> Используйте общее меню для перехода к другим справочникам</li>
+                </ul>
+            </details>
+        </div>
+
+        <!-- Контейнер для результатов - ПУСТОЙ по умолчанию, появляется только при поиске -->
+        <div id="resultsContainer" class="results-container">
+            <!-- Контент добавляется динамически скриптом script.js -->
+        </div>
+    </main>
+
+    <footer>
+        <p>
+            Данные актуальны на <strong>13.12.2025</strong>. Проект с открытым исходным кодом на <a href="https://github.com/prog815/okved2" target="_blank" rel="noopener noreferrer">GitHub</a>.
+            <br>
+            <small>Официальные источники: <a href="https://classifikators.ru/okved" target="_blank" rel="noopener noreferrer">Classifikators.ru</a> • <a href="https://www.consultant.ru/document/cons_doc_LAW_163320/" target="_blank" rel="noopener noreferrer">КонсультантПлюс</a> • <a href="https://base.garant.ru/12131794/" target="_blank" rel="noopener noreferrer">ГАРАНТ</a></small>
+        </p>
+    </footer>
+
+    <!-- Подключение JavaScript файлов -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Общее навигационное меню -->
+    <script src="https://prog815.github.io/common-menu/menu.js"></script>
+    <common-projects-menu></common-projects-menu>
+</body>
+</html>
