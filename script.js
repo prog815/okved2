@@ -116,29 +116,36 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayResults(results, query) {
         const resultsContainer = document.getElementById('resultsContainer');
         
-        // Показываем контейнер с результатами ТОЛЬКО если есть запрос и результаты
-        if ((!query || query.length < 2) && results.length === 0) {
+        // Очищаем предыдущие результаты
+        resultsContainer.innerHTML = '';
+        
+        // Прячем контейнер если:
+        // 1. Запрос пустой или меньше 2 символов
+        // 2. Нет результатов
+        const trimmedQuery = query ? query.trim() : '';
+        if (trimmedQuery.length < 2 || results.length === 0) {
             resultsContainer.style.display = 'none';
-            return;
+            
+            // Показываем сообщение "нет результатов" только если был запрос >= 2 символов
+            if (trimmedQuery.length >= 2 && results.length === 0) {
+                resultsContainer.style.display = 'block';
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        По запросу "<strong>${escapeHtml(query)}</strong>" ничего не найдено.<br>
+                        Попробуйте:
+                        <ul style="text-align:left;display:inline-block;margin-top:10px">
+                            <li>Упростить запрос (например, "кафе" вместо "кафе и рестораны")</li>
+                            <li>Проверить, что все слова написаны правильно</li>
+                            <li>Использовать код ОКВЭД (например, "56.10")</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            return; // ВАЖНО: здесь return только если нет результатов или короткий запрос
         }
         
-        // Если дошли сюда - показываем контейнер
+        // Если есть результаты - показываем контейнер
         resultsContainer.style.display = 'block';
-        
-        if (results.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="no-results">
-                    По запросу "<strong>${escapeHtml(query)}</strong>" ничего не найдено.<br>
-                    Попробуйте:
-                    <ul style="text-align:left;display:inline-block;margin-top:10px">
-                        <li>Упростить запрос (например, "кафе" вместо "кафе и рестораны")</li>
-                        <li>Проверить, что все слова написаны правильно</li>
-                        <li>Использовать код ОКВЭД (например, "56.10")</li>
-                    </ul>
-                </div>
-            `;
-            return;
-        }
         
         // Сортируем результаты для ОКВЭД2
         const sortedResults = sortOkvedResults(results, query);
@@ -190,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ${resultsHtml}
             ${results.length > 50 ? 
                 `<div class="more-results">И ещё ${results.length - 50} записей... 
-                 <button id="showAllBtn" class="show-all-btn">Показать все</button></div>` 
+                <button id="showAllBtn" class="show-all-btn">Показать все</button></div>` 
                 : ''}
         `;
         
@@ -367,8 +374,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const query = e.target.value.trim();
         
         if (!query) {
-            resultsContainer.innerHTML = '<div class="initial-message">Введите код или вид деятельности для поиска</div>';
-            resultsContainer.style.display = 'block';
+            // При пустом поле ВООБЩЕ НЕ ПОКАЗЫВАЕМ контейнер
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = ''; // Очищаем содержимое
             return;
         }
         
@@ -467,9 +475,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Инициализация кнопок копирования
     setupCopyButtons();
     
-    // Показ начального сообщения
-    resultsContainer.innerHTML = '<div class="initial-message">Введите код ОКВЭД или вид деятельности для поиска</div>';
-    resultsContainer.style.display = 'block';
+    // Начальное состояние - контейнер скрыт
+    resultsContainer.style.display = 'none';
+    resultsContainer.innerHTML = '';
     
     // Логирование готовности
     console.log('✅ Справочник ОКВЭД2 инициализирован. Готов к поиску!');
