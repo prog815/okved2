@@ -1,0 +1,80 @@
+name: Daily OKVED2 Update
+
+on:
+  schedule:
+    - cron: '0 5 * * *'      # 05:00 UTC = 08:00 МСК
+  workflow_dispatch:          # ручной запуск
+
+jobs:
+  sync-and-trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write         # встроенный токен Actions для коммита
+    env:
+      # API-токен Kaggle НОВОГО образца (CLI >= 1.8.0 / kagglehub >= 0.4.1).
+      # Персональный токен этого справочника: не затрагивает другие
+      # справочники и legacy KAGGLE_KEY в okpd2.
+      # kaggle.json не нужен — CLI читает переменную окружения напрямую.
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN_OKVED2 }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Kaggle CLI с поддержкой API-токенов (>= 1.8.0)
+        run: |
+          pip install -q --upgrade kaggle
+          kaggle --version
+          python - <<'EOF'
+          import re, subprocess
+          out = subprocess.check_output(["kaggle", "--version"], text=True).strip()
+          m = re.search(r"(\d+)\.(\d+)", out)
+          assert m and tuple(map(int, m.groups())) >= (1, 8), \
+              f"нужен kaggle CLI >= 1.8.0 для API-токенов, получен: {out}"
+          print("OK: kaggle CLI поддерживает API-токены")
+          EOF
+
+      - name: Download latest kernel output
+        run: |
+          mkdir -p ./output
+          kaggle kernels output eavprog/okved2-classifier-downloader -p ./output
+          echo "Содержимое output:"
+          find ./output -maxdepth 4 -type f | head -30
+
+      - name: Copy web files to repo root
+        run: |
+          # тетрадка OKVED2 пишет файлы в корень /kaggle/working
+          SRC=./output
+          for f in okved2.json okved2.json.gz okved2_meta.json okved2_meta.json.gz; do
+            if [ -f "$SRC/$f" ]; then
+              cp "$SRC/$f" "./$f"
+              echo "copied $f"
+            else
+              echo "MISSING $f в output тетрадки"
+              exit 1
+            fi
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add okved2.json okved2.json.gz okved2_meta.json okved2_meta.json.gz
+          if git diff --cached --quiet; then
+            echo "✅ Изменений нет — данные уже актуальны"
+          else
+            SOURCE_DATE=$(python -c "import json;print(json.load(open('okved2_meta.json')).get('source_date','?'))")
+            git commit -m "Auto-update: OKVED2 data from kernel output (source $SOURCE_DATE) [skip ci]"
+            git push
+            echo "✅ Изменения запушены"
+          fi
+
+      - name: Trigger new notebook run (fire-and-forget)
+        run: |
+          mkdir -p ./nb
+          kaggle kernels pull eavprog/okved2-classifier-downloader -p ./nb --metadata
+          kaggle kernels push -p ./nb
+          echo "✅ Тетрадка запущена; workflow не ждёт её завершения"
