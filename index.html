@@ -1,77 +1,299 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Справочник ОКВЭД2 — бесплатный онлайн-поиск кодов видов деятельности</title>
-    <meta name="description" content="Быстрый и удобный поиск по ОКВЭД2 (ОК 029-2014). Находите коды видов экономической деятельности для регистрации бизнеса, статистики, бухгалтерии. Полная база: 2929 записей.">
-    <meta name="keywords" content="ОКВЭД2, классификатор видов деятельности, коды ОКВЭД2, поиск ОКВЭД2, ОК 029-2014, регистрация ИП, ООО, виды деятельности">
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Бесплатный интерактивный справочник ОКВЭД2 (ОК 029-2014): мгновенный поиск по коду и названию, 3102 записи, официальные данные Росстата. Без регистрации.">
+<meta name="theme-color" content="#4E9450">
+<title>Справочник ОКВЭД2 — бесплатный онлайн-поиск кодов видов деятельности</title>
+<style>
+  :root{
+    --accent:#4E9450; --accent-dark:#3B7A3D; --bg:#F6FAF6;
+    --card-border:#E1EDE1; --text:#22301F; --muted:#5A6B57;
+    --mark:#D9EFD9; --code-bg:#EDF7ED; --code-border:#CFE3CF;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       background:var(--bg);color:var(--text);line-height:1.45}
+  .wrap{max-width:860px;margin:0 auto;padding:16px 14px 40px}
+  header h1{font-size:24px;margin:8px 0 4px}
+  header .sub{color:var(--muted);font-size:14px;margin:0 0 10px}
+  .info-line{background:#fff;border:1px solid var(--card-border);border-radius:12px;
+             padding:10px 14px;font-size:13.5px;color:var(--muted);margin:10px 0}
+  .info-line b{color:var(--text)}
+  a{color:var(--accent-dark)}
+  /* --- липкий поиск --- */
+  .search-sticky{position:sticky;top:0;z-index:20;background:rgba(246,250,246,.92);
+                 backdrop-filter:blur(6px);padding:10px 0 8px;margin-bottom:4px}
+  #searchBox{width:100%;padding:14px 16px;font-size:17px;border:2px solid var(--code-border);
+             border-radius:12px;outline:none;background:#fff;transition:border-color .15s}
+  #searchBox:focus{border-color:var(--accent);box-shadow:0 2px 10px rgba(78,148,80,.18)}
+  #searchBox:disabled{background:#f0f0f0;color:#999}
+  .hint{font-size:12.5px;color:var(--muted);margin:6px 2px}
+  .chips{margin:8px 0 2px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+  .chip{border:1px solid var(--code-border);background:#fff;color:var(--accent-dark);
+        border-radius:999px;padding:4px 12px;font-size:12.5px;cursor:pointer}
+  .chip:hover{background:var(--code-bg)}
+  /* --- результаты --- */
+  #counter{font-size:13.5px;color:var(--muted);margin:8px 2px}
+  .card{background:#fff;border:1px solid var(--card-border);border-radius:12px;
+        padding:12px 14px;margin:10px 0;box-shadow:0 1px 2px rgba(30,60,30,.06)}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .code{font-family:ui-monospace,Consolas,monospace;font-size:16px;font-weight:700;color:#2F6B31;
+        background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;
+        padding:4px 10px;cursor:pointer}
+  .code:hover{background:#E0F0E0}
+  .badge{font-size:11px;border-radius:999px;padding:2px 9px;background:#EEF5EE;color:var(--muted);
+         border:1px solid var(--card-border)}
+  .badge.sec{background:#F4F7F4}
+  .name{margin-top:6px;font-size:15px}
+  mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
+  .desc-toggle{border:none;background:none;color:var(--accent-dark);font-size:12.5px;
+               cursor:pointer;padding:6px 0 0}
+  .desc-toggle:hover{text-decoration:underline}
+  .desc-text{white-space:pre-line;color:#55654F;font-size:13.5px;
+             border-left:3px solid var(--code-border);padding:6px 10px;margin-top:8px;background:#FBFDFB}
+  .more{display:block;margin:14px auto;border:1px solid var(--code-border);background:#fff;
+        color:var(--accent-dark);border-radius:999px;padding:8px 22px;font-size:14px;cursor:pointer}
+  .more:hover{background:var(--code-bg)}
+  .status{color:var(--muted);font-size:14px;margin:14px 2px}
+  /* --- подсказки и подвал --- */
+  .howto{background:#fff;border:1px solid var(--card-border);border-radius:12px;
+         padding:12px 16px;margin:18px 0;font-size:13.5px;color:var(--muted)}
+  .howto h3{margin:0 0 8px;font-size:14px;color:var(--text)}
+  .howto ul{margin:0;padding-left:18px}
+  footer{font-size:12.5px;color:var(--muted);margin-top:22px}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+         background:var(--accent-dark);color:#fff;border-radius:999px;padding:8px 18px;
+         font-size:13.5px;opacity:0;pointer-events:none;transition:all .25s;z-index:50}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
 </head>
 <body>
-    <header>
-        <h1>🏢 Интерактивный справочник ОКВЭД2</h1>
-        <div class="header-description">
-            <p><strong>Общероссийский классификатор видов экономической деятельности (ОК 029-2014)</strong></p>
-            <p>Используется для государственной регистрации юридических лиц и индивидуальных предпринимателей, статистического наблюдения, анализа и прогнозирования социально-экономического развития. Основан на европейской классификации NACE Rev. 2.</p>
-            <p class="header-note">В справочнике актуальная база из 2929 записей. Данные обновляются с <a href="https://classifikators.ru/okved" target="_blank" rel="noopener noreferrer">официальных источников</a>.</p>
-        </div>
-    </header>
 
-    <main>
-        <!-- Поле для поиска -->
-        <div class="search-container">
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Введите код (56.10.1) или вид деятельности (Кафе, ресторан)..."
-                aria-label="Поле для поиска по справочнику ОКВЭД2"
-            >
-            <div class="hint">
-                Поиск запустится автоматически при вводе.
-            </div>
-            
-            <!-- Блок популярных запросов -->
-            <div class="popular-queries">
-                <div class="hint">
-                    Популярные запросы: <span class="query-tag">кафе</span>, <span class="query-tag">строительство</span>, <span class="query-tag">перевозки</span>, <span class="query-tag">розничная торговля</span>
-                </div>
-            </div>
-        </div>
+<!-- Общее меню экосистемы — в самом верху страницы -->
+<script src="https://prog815.github.io/common-menu/menu.js?v=2.0.0"></script>
+<common-projects-menu></common-projects-menu>
 
-        <!-- Информационный блок перед результатами -->
-        <div class="info-block">
-            <details>
-                <summary><strong>📋 Как пользоваться справочником:</strong></summary>
-                <ul>
-                    <li><strong>Поиск по коду:</strong> Введите код полностью (56.10) или частично (56)</li>
-                    <li><strong>Поиск по названию:</strong> Введите одно или несколько слов (кафе ресторан)</li>
-                    <li><strong>Копирование:</strong> Кликните на код для копирования в буфер обмена</li>
-                    <li><strong>Навигация:</strong> Используйте общее меню для перехода к другим справочникам</li>
-                </ul>
-            </details>
-        </div>
+<div class="wrap">
 
-        <!-- Контейнер для результатов - ПУСТОЙ по умолчанию, появляется только при поиске -->
-        <div id="resultsContainer" class="results-container">
-            <!-- Контент добавляется динамически скриптом script.js -->
-        </div>
-    </main>
+  <header>
+    <h1>🏢 Интерактивный справочник ОКВЭД2</h1>
+    <p class="sub">Общероссийский классификатор видов экономической деятельности (ОК 029-2014, КДЕС Ред. 2).
+      Используется при регистрации юридических лиц и ИП, основан на европейской классификации NACE Rev. 2.</p>
+  </header>
 
-    <footer>
-        <p>
-            Данные актуальны на <strong>13.12.2025</strong>. Проект с открытым исходным кодом на <a href="https://github.com/prog815/okved2" target="_blank" rel="noopener noreferrer">GitHub</a>.
-            <br>
-            <small>Официальные источники: <a href="https://classifikators.ru/okved" target="_blank" rel="noopener noreferrer">Classifikators.ru</a> • <a href="https://www.consultant.ru/document/cons_doc_LAW_163320/" target="_blank" rel="noopener noreferrer">КонсультантПлюс</a> • <a href="https://base.garant.ru/70650726/" target="_blank" rel="noopener noreferrer">ГАРАНТ</a></small>
-        </p>
-    </footer>
+  <div class="info-line" id="dataInfo">В справочнике <b>3102</b> записи. Данные обновлены <b>1 октября 2026</b> — официальный источник: <a href="https://rosstat.gov.ru/classification" target="_blank" rel="noopener">Росстат</a>.</div>
 
-    <!-- Подключение JavaScript файлов -->
-    <script src="data.js"></script>
-    <script src="script.js"></script>
+  <div class="search-sticky">
+    <input id="searchBox" type="search" placeholder="Код (01.11) или название (кафе ресторан)…" autocomplete="off" disabled aria-label="Поиск по справочнику ОКВЭД2">
+    <div class="hint">Поиск запустится автоматически при вводе.</div>
+    <div class="chips">Популярные запросы:
+      <button class="chip" data-q="кафе">кафе</button>
+      <button class="chip" data-q="строительство">строительство</button>
+      <button class="chip" data-q="перевозки">перевозки</button>
+      <button class="chip" data-q="розничная торговля">розничная торговля</button>
+    </div>
+  </div>
 
-    <!-- Общее навигационное меню -->
-    <script src="https://prog815.github.io/common-menu/menu.js"></script>
-    <common-projects-menu></common-projects-menu>
+  <div id="counter"></div>
+  <div id="results" aria-live="polite"></div>
+  <div class="status" id="emptyHint">Введите код или название вида деятельности — результаты появятся мгновенно.</div>
+  <div class="status" id="status">⏳ Загрузка справочника…</div>
+  <button class="more" id="moreBtn" hidden>Показать ещё (<span id="moreLeft">0</span>)</button>
+
+  <div class="howto">
+    <h3>📋 Как пользоваться справочником</h3>
+    <ul>
+      <li><b>Поиск по коду:</b> введите код полностью (56.10) или частично (56).</li>
+      <li><b>Поиск по названию:</b> введите одно или несколько слов (кафе ресторан) — подойдут все слова сразу.</li>
+      <li><b>Копирование:</b> кликните на код — он скопируется в буфер обмена.</li>
+      <li><b>Описания:</b> кнопка «Подробнее» раскрывает состав группировки «Эта группировка включает…».</li>
+      <li><b>Навигация:</b> меню вверху страницы ведёт к другим справочникам.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Данные актуальны на <span id="footerDate">1 октября 2026</span>. Проект с открытым исходным кодом на
+    <a href="https://github.com/prog815/okved2" target="_blank" rel="noopener">GitHub</a>.<br>
+    Официальные источники:
+    <a href="https://rosstat.gov.ru/classification" target="_blank" rel="noopener">Росстат</a> •
+    <a href="https://www.consultant.ru/document/cons_doc_LAW_163320/" target="_blank" rel="noopener">КонсультантПлюс</a> •
+    <a href="https://base.garant.ru/70650726/" target="_blank" rel="noopener">ГАРАНТ</a>
+  </footer>
+
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+/* ============================================================
+   Справочник ОКВЭД2 v2 — монолитный интерфейс.
+   Данные: okved2.json.gz (основной, через DecompressionStream)
+   с fallback на okved2.json. Метаданные: okved2_meta.json.
+   Размер страницы пагинации: 50 записей.
+   ============================================================ */
+var DATA_URL_GZ='okved2.json.gz', DATA_URL='okved2.json', META_URL='okved2_meta.json';
+var ROSSTAT_URL='https://rosstat.gov.ru/classification';
+var PAGE=50;
+var LEVELS={0:'раздел',2:'класс',3:'подкласс',4:'группа',5:'подгруппа',6:'вид'};
+/* Синонимы: внутри группы — ИЛИ, между словами запроса — И */
+var SYNONYMS={
+  'кафе':['кафе','ресторан','общественного питания'],
+  'ресторан':['ресторан','кафе'],
+  'перевозки':['перевоз','транспорт','груз'],
+  'перевозка':['перевоз','транспорт','груз'],
+  'строительство':['строитель','монтаж'],
+  'торговля':['торговл'],
+  'розничная':['розничн'],
+  'оптовая':['оптов'],
+  'производство':['производ','изготовлен']
+};
+var DATA=[], SECTION_NAMES={}, currentResults=[], currentTerms=[], mode='', rendered=0;
+
+function $(s){return document.querySelector(s);}
+function norm(s){return (s||'').toLowerCase().replace(/ё/g,'е');}
+function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+function escReg(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function plural(n,f){var m10=n%10,m100=n%100;
+  if(m10===1&&m100!==11)return f[0];
+  if(m10>=2&&m10<=4&&(m100<12||m100>14))return f[1];
+  return f[2];}
+
+/* ---------- загрузка данных ---------- */
+function loadData(){
+  if(typeof DecompressionStream!=='undefined'){
+    return fetch(DATA_URL_GZ,{cache:'no-cache'}).then(function(r){
+      if(!r.ok||!r.body)throw new Error('gz HTTP');
+      var text=new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+      return text.then(function(t){return JSON.parse(t);});
+    }).catch(function(e){
+      console.warn('gzip недоступен, fallback на json:',e);
+      return fetch(DATA_URL,{cache:'no-cache'}).then(function(r){return r.json();});
+    });
+  }
+  return fetch(DATA_URL,{cache:'no-cache'}).then(function(r){return r.json();});
+}
+function loadMeta(){
+  return fetch(META_URL,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+        .catch(function(){return null;});
+}
+
+/* ---------- поиск ---------- */
+function doSearch(raw){
+  var q=norm(raw).trim();
+  if(!q)return{results:[],mode:'empty'};
+  if(/^[\d\s.]+$/.test(q)&&/\d/.test(q)){                 /* префиксный по коду */
+    var qd=q.replace(/\D/g,'');
+    return{results:DATA.filter(function(r){return r.v>0&&r.c.replace(/\D/g,'').indexOf(qd)===0;}),mode:'code',qd:qd};
+  }
+  var tokens=q.split(/\s+/).filter(Boolean);              /* по названию: И между словами */
+  var groups=tokens.map(function(t){return SYNONYMS[t]||[t];});
+  var res=DATA.filter(function(r){
+    var n=norm(r.n);
+    return groups.every(function(g){return g.some(function(v){return n.indexOf(norm(v))!==-1;});});
+  });
+  var terms=[];groups.forEach(function(g){g.forEach(function(v){terms.push(norm(v));});});
+  return{results:res,mode:'name',terms:terms};
+}
+function highlight(text,terms){
+  var out=esc(text);
+  terms.forEach(function(t){
+    if(!t)return;
+    out=out.replace(new RegExp('('+escReg(esc(t))+')','gi'),'<mark>$1</mark>');
+  });
+  return out;
+}
+
+/* ---------- рендер ---------- */
+function cardHTML(r){
+  var badges='<span class="badge">'+(LEVELS[r.v]||'')+'</span>'+
+             (r.v>0?'<span class="badge sec">раздел '+esc(r.s)+'</span>':'');
+  var codeHtml=esc(r.c), nameHtml;
+  if(mode==='code'){
+    var raw=$('#searchBox').value.trim();
+    if(raw&&r.c.indexOf(raw)===0)codeHtml='<mark>'+esc(raw)+'</mark>'+esc(r.c.slice(raw.length));
+    nameHtml=esc(r.n);
+  }else{
+    nameHtml=highlight(r.n,currentTerms);
+  }
+  var descBtn=r.d?'<div><button class="desc-toggle">📖 Подробнее</button></div>':'';
+  var desc=r.d?'<div class="desc" hidden><div class="desc-text">'+esc(r.d)+'</div></div>':'';
+  return '<div class="card"><div class="row">'+
+         '<button class="code" data-code="'+esc(r.c)+'" title="Скопировать код">'+codeHtml+'</button>'+
+         '<span>'+badges+'</span></div>'+
+         '<div class="name">'+nameHtml+'</div>'+descBtn+desc+'</div>';
+}
+function appendPage(){
+  var slice=currentResults.slice(rendered,rendered+PAGE);
+  $('#results').insertAdjacentHTML('beforeend',slice.map(cardHTML).join(''));
+  rendered+=slice.length;
+  $('#moreBtn').hidden=rendered>=currentResults.length;
+  $('#moreLeft').textContent=currentResults.length-rendered;
+}
+function runSearch(q){
+  var out=doSearch(q);
+  mode=out.mode;currentTerms=out.terms||[];currentResults=out.results||[];rendered=0;
+  $('#results').innerHTML='';
+  if(mode==='empty'){$('#counter').textContent='';$('#moreBtn').hidden=true;$('#emptyHint').hidden=false;return;}
+  $('#emptyHint').hidden=true;
+  $('#counter').textContent='Найдено: '+currentResults.length+' '+(mode==='code'?'по коду':'по названию');
+  appendPage();
+}
+
+/* ---------- копирование и тост ---------- */
+var toastTimer=null;
+function toast(msg){var el=$('#toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},1500);}
+function fallbackCopy(text,done){var ta=document.createElement('textarea');ta.value=text;
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);done();}
+function copyCode(code){var done=function(){toast('Код '+code+' скопирован');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done).catch(function(){fallbackCopy(code,done);});
+  }else fallbackCopy(code,done);}
+
+/* ---------- события ---------- */
+$('#results').addEventListener('click',function(e){
+  var codeBtn=e.target.closest('.code');
+  if(codeBtn){copyCode(codeBtn.getAttribute('data-code'));return;}
+  var t=e.target.closest('.desc-toggle');
+  if(t){
+    var desc=t.closest('.card').querySelector('.desc');
+    var open=desc.hasAttribute('hidden');
+    if(open)desc.removeAttribute('hidden');else desc.setAttribute('hidden','');
+    t.textContent=open?'📖 Свернуть':'📖 Подробнее';
+  }
+});
+var input=$('#searchBox'),deb=null;
+input.addEventListener('input',function(){clearTimeout(deb);deb=setTimeout(function(){runSearch(input.value);},200);});
+Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(ch){
+  ch.addEventListener('click',function(){input.value=ch.getAttribute('data-q');runSearch(input.value);input.focus();});
+});
+$('#moreBtn').addEventListener('click',appendPage);
+
+/* ---------- старт ---------- */
+loadData().then(function(data){
+  DATA=data;
+  DATA.forEach(function(r){if(r.v===0)SECTION_NAMES[r.c]=r.n;});
+  return loadMeta();
+}).then(function(meta){
+  if(meta){
+    $('#dataInfo').innerHTML='В справочнике <b>'+meta.records_count+'</b> '+
+      plural(meta.records_count,['запись','записи','записей'])+
+      '. Данные обновлены <b>'+esc(meta.source_date_display)+'</b> — официальный источник: '+
+      '<a href="'+ROSSTAT_URL+'" target="_blank" rel="noopener">Росстат</a>.';
+    $('#footerDate').textContent=meta.source_date_display;
+  }
+  $('#status').hidden=true;
+  input.disabled=false;
+  input.focus();
+}).catch(function(e){
+  console.error(e);
+  $('#status').textContent='Не удалось загрузить данные справочника. Попробуйте обновить страницу.';
+});
+})();
+</script>
 </body>
 </html>
