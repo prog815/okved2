@@ -1,0 +1,11 @@
+{
+  "source_date": "2026-10-01",
+  "source_date_display": "1 октября 2026",
+  "generated_at": "2026-10-04T14:55:22",
+  "version": "2026-10-01",
+  "source_url": "https://rosstat.gov.ru/storage/mediabank/OKVED2.rar",
+  "classifier_name": "ОКВЭД2 (ОК 029-2014)",
+  "records_count": 3102,
+  "leaf_count": 2155,
+  "data_hash": "2ad8d245ed7bd93b"
+}
