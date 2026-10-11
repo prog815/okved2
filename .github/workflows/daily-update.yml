@@ -8,7 +8,7 @@ on:
 jobs:
   sync-and-trigger:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       contents: write         # встроенный токен Actions для коммита
     env:
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -43,22 +43,38 @@ jobs:
           kaggle kernels output eavprog/okved2-classifier-downloader -p ./output
           echo "Содержимое output:"
           find ./output -maxdepth 4 -type f | head -30
+          echo ""
+          echo "--- Попытка показать лог/диагностику тетрадки (если есть) ---"
+          for f in ./output/*.log ./output/*.txt ./output/__notebook*.ipynb; do
+            [ -f "$f" ] && { echo ">>> $f (last 50 lines) >>>"; tail -n 50 "$f"; echo "<<< $f <<<"; echo ""; }
+          done || true
 
-      - name: Copy web files to repo root
+      - name: Copy web files to repo root (не падает, ставит флаг)
+        id: copy
         run: |
-          # тетрадка OKVED2 пишет файлы в корень /kaggle/working
+          # Тетрадка OKVED2 пишет файлы в корень /kaggle/working.
+          # При падении тетрадки output пуст — это достоверный признак сбоя.
           SRC=./output
+          MISSING=0
           for f in okved2.json okved2.json.gz okved2_meta.json okved2_meta.json.gz; do
             if [ -f "$SRC/$f" ]; then
               cp "$SRC/$f" "./$f"
               echo "copied $f"
             else
-              echo "MISSING $f в output тетрадки"
-              exit 1
+              echo "::warning::MISSING $f в output тетрадки (тетрадка, вероятно, упала)"
+              MISSING=$((MISSING+1))
             fi
           done
+          if [ "$MISSING" -gt 0 ]; then
+            echo "❌ Отсутствует $MISSING из 4 файлов — коммит пропущен, сайт остаётся на последней хорошей версии"
+            echo "FILES_OK=false" >> "$GITHUB_ENV"
+          else
+            echo "✅ Все 4 файла на месте"
+            echo "FILES_OK=true" >> "$GITHUB_ENV"
+          fi
 
       - name: Commit and push changes
+        if: env.FILES_OK == 'true'
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "GitHub Actions"
@@ -72,9 +88,10 @@ jobs:
             echo "✅ Изменения запушены"
           fi
 
-      - name: Trigger new notebook run (fire-and-forget)
+      - name: Trigger new notebook run (fire-and-forget, всегда)
+        if: always()
         run: |
           mkdir -p ./nb
           kaggle kernels pull eavprog/okved2-classifier-downloader -p ./nb --metadata
           kaggle kernels push -p ./nb
-          echo "✅ Тетрадка запущена; workflow не ждёт её завершения"
+          echo "✅ Тетрадка перезапущена (round-trip); workflow не ждёт её завершения"
