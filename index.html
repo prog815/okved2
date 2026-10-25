@@ -1,302 +1,1223 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Бесплатный интерактивный справочник ОКВЭД2 (ОК 029-2014): мгновенный поиск по коду и названию, 3102 записи, официальные данные Росстата. Без регистрации.">
-<link rel="icon" type="image/svg+xml"
-      href="https://prog815.github.io/common-menu/favicon.svg?v=1.0.0">
-<meta name="theme-color" content="#4E9450">
-<title>Справочник ОКВЭД2 — бесплатный онлайн-поиск кодов видов деятельности</title>
-<style>
-  :root{
-    --accent:#4E9450; --accent-dark:#3B7A3D; --bg:#F6FAF6;
-    --card-border:#E1EDE1; --text:#22301F; --muted:#5A6B57;
-    --mark:#D9EFD9; --code-bg:#EDF7ED; --code-border:#CFE3CF;
-  }
-  *{box-sizing:border-box}
-  [hidden]{display:none!important}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-       background:var(--bg);color:var(--text);line-height:1.45}
-  .wrap{max-width:860px;margin:0 auto;padding:16px 14px 40px}
-  header h1{font-size:24px;margin:8px 0 4px}
-  header .sub{color:var(--muted);font-size:14px;margin:0 0 10px}
-  .info-line{background:#fff;border:1px solid var(--card-border);border-radius:12px;
-             padding:10px 14px;font-size:13.5px;color:var(--muted);margin:10px 0}
-  .info-line b{color:var(--text)}
-  a{color:var(--accent-dark)}
-  /* --- липкий поиск --- */
-  .search-sticky{position:sticky;top:0;z-index:20;background:rgba(246,250,246,.92);
-                 backdrop-filter:blur(6px);padding:10px 0 8px;margin-bottom:4px}
-  #searchBox{width:100%;padding:14px 16px;font-size:17px;border:2px solid var(--code-border);
-             border-radius:12px;outline:none;background:#fff;transition:border-color .15s}
-  #searchBox:focus{border-color:var(--accent);box-shadow:0 2px 10px rgba(78,148,80,.18)}
-  #searchBox:disabled{background:#f0f0f0;color:#999}
-  .hint{font-size:12.5px;color:var(--muted);margin:6px 2px}
-  .chips{margin:8px 0 2px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
-  .chip{border:1px solid var(--code-border);background:#fff;color:var(--accent-dark);
-        border-radius:999px;padding:4px 12px;font-size:12.5px;cursor:pointer}
-  .chip:hover{background:var(--code-bg)}
-  /* --- результаты --- */
-  #counter{font-size:13.5px;color:var(--muted);margin:8px 2px}
-  .card{background:#fff;border:1px solid var(--card-border);border-radius:12px;
-        padding:12px 14px;margin:10px 0;box-shadow:0 1px 2px rgba(30,60,30,.06)}
-  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .code{font-family:ui-monospace,Consolas,monospace;font-size:16px;font-weight:700;color:#2F6B31;
-        background:var(--code-bg);border:1px solid var(--code-border);border-radius:8px;
-        padding:4px 10px;cursor:pointer}
-  .code:hover{background:#E0F0E0}
-  .badge{font-size:11px;border-radius:999px;padding:2px 9px;background:#EEF5EE;color:var(--muted);
-         border:1px solid var(--card-border)}
-  .badge.sec{background:#F4F7F4}
-  .name{margin-top:6px;font-size:15px}
-  mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 1px}
-  .desc-toggle{border:none;background:none;color:var(--accent-dark);font-size:12.5px;
-               cursor:pointer;padding:6px 0 0}
-  .desc-toggle:hover{text-decoration:underline}
-  .desc-text{white-space:pre-line;color:#55654F;font-size:13.5px;
-             border-left:3px solid var(--code-border);padding:6px 10px;margin-top:8px;background:#FBFDFB}
-  .more{display:block;margin:14px auto;border:1px solid var(--code-border);background:#fff;
-        color:var(--accent-dark);border-radius:999px;padding:8px 22px;font-size:14px;cursor:pointer}
-  .more:hover{background:var(--code-bg)}
-  .status{color:var(--muted);font-size:14px;margin:14px 2px}
-  /* --- подсказки и подвал --- */
-  .howto{background:#fff;border:1px solid var(--card-border);border-radius:12px;
-         padding:12px 16px;margin:18px 0;font-size:13.5px;color:var(--muted)}
-  .howto h3{margin:0 0 8px;font-size:14px;color:var(--text)}
-  .howto ul{margin:0;padding-left:18px}
-  footer{font-size:12.5px;color:var(--muted);margin-top:22px}
-  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
-         background:var(--accent-dark);color:#fff;border-radius:999px;padding:8px 18px;
-         font-size:13.5px;opacity:0;pointer-events:none;transition:all .25s;z-index:50}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Справочник ОКВЭД2 — бесплатный онлайн-поиск кодов видов деятельности</title>
+  <meta name="description" content="Бесплатный интерактивный справочник ОКВЭД2 (ОК 029-2014): мгновенный поиск по коду и названию, 3102 записи, официальные данные Росстата. Без регистрации.">
+  <link rel="icon" type="image/svg+xml"
+        href="https://prog815.github.io/common-menu/favicon.svg?v=1.0.0">
+  <meta name="theme-color" content="#4E9450">
+  <style>
+    :root {
+      --bg: #f5f7f5;
+      --card: #ffffff;
+      --text: #17201a;
+      --muted: #617066;
+      --border: #dbe3db;
+      --accent: #4e9450;
+      --accent-dark: #3d7a3f;
+      --accent-soft: #e8f3e8;
+      --shadow: 0 10px 30px rgba(20, 35, 25, 0.08);
+      --radius: 16px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    common-projects-menu { display: block; width: 100%; }
+
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 16px 16px 110px;
+    }
+
+    .hero { padding: 18px 0 8px; }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      line-height: 1.15;
+    }
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 900px;
+    }
+
+    .search-panel {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      margin: 14px 0 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1 1 300px; /* Поиск занимает всё доступное место */
+      min-width: 0;
+    }
+
+    #q {
+      width: 100%;
+      padding: 13px 40px 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      outline: none;
+      background: #fff;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    #q:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(78, 148, 80, 0.12);
+    }
+
+    .clear-q {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      color: #888;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .clear-q:hover { background: #eef3ee; color: var(--text); }
+
+    .filter-wrap {
+      flex: 0 0 auto;
+    }
+
+    #sectionFilter {
+      appearance: none;
+      padding: 13px 36px 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.98rem;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23617066' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 14px center;
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      max-width: 280px;
+    }
+    #sectionFilter:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(78, 148, 80, 0.12);
+    }
+
+    .hint {
+      margin: 10px 2px 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-weight: 600;
+      color: var(--accent-dark);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 4px 16px rgba(20, 35, 25, 0.04);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .3s ease, background .3s ease;
+    }
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(20, 35, 25, 0.08);
+      border-color: #c9d8c9;
+    }
+    .card.highlight {
+      background: #edf6ed;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(78, 148, 80, 0.25);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .code-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #f8fbf8;
+      color: var(--accent-dark);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 700;
+      font-size: 0.98rem;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .1s ease;
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+    .code-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+    .code-btn:active { transform: scale(0.98); }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .badge.clickable { cursor: pointer; transition: filter .15s ease; }
+    .badge.clickable:hover { filter: brightness(0.95); }
+    .badge.sec {
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      border-color: #c8e3c8;
+    }
+    .badge.lvl {
+      background: #f2f4f2;
+      color: #6b7a6e;
+      border-color: #e2e8e2;
+    }
+
+    .name {
+      color: var(--text);
+      font-size: 0.98rem;
+      overflow-wrap: anywhere;
+    }
+
+    mark {
+      background: #ffe58a;
+      color: inherit;
+      padding: 0 2px;
+      border-radius: 4px;
+    }
+
+    .desc-toggle {
+      border: none;
+      background: none;
+      color: var(--accent-dark);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 6px 0 0;
+      font-weight: 500;
+    }
+    .desc-toggle:hover { text-decoration: underline; }
+
+    .desc-text {
+      white-space: pre-line;
+      color: var(--muted);
+      font-size: 0.88rem;
+      border-left: 3px solid var(--border);
+      padding: 6px 10px;
+      margin-top: 8px;
+      background: #f9fbf9;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f8fbf8;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease;
+      font-family: inherit;
+    }
+    .btn-small:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+    .empty {
+      margin-top: 10px;
+      padding: 24px;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 11px 16px;
+      font-size: 0.96rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .1s ease;
+    }
+    .btn:hover { background: #f3f8f3; border-color: #bfd3bf; }
+    .btn:active { transform: scale(0.98); }
+
+    .more-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-size: 0.95rem;
+    }
+
+    .stats { color: var(--text); font-size: 0.98rem; }
+    .stats b { color: var(--accent-dark); }
+
+    .date-line {
+      margin-top: 6px;
+      color: var(--muted);
+    }
+
+    .sources {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sources-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      align-items: baseline;
+    }
+
+    .sources-label {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .sources-row a {
+      color: var(--accent-dark);
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px solid transparent;
+    }
+    .sources-row a:hover { border-bottom-color: var(--accent); }
+
+    .disclaimer {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .fab-stack {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 50;
+    }
+
+    .fab {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--accent-dark);
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity .18s ease, transform .18s ease, background .15s ease;
+      backdrop-filter: blur(8px);
+    }
+    .fab.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .fab:hover { background: var(--accent-soft); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translate(-50%, 16px);
+      background: #1f2a22;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.94rem;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 60;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 640px) {
+      .page { padding: 12px 12px 100px; }
+      .search-panel { padding: 12px; }
+      .search-row { flex-direction: column; align-items: stretch; }
+      #sectionFilter { max-width: 100%; width: 100%; }
+      .card-top { flex-direction: column; align-items: stretch; }
+      .code-btn { align-self: flex-start; }
+      .badges { justify-content: flex-start; }
+      .fab-stack { right: 12px; bottom: 12px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- Общее меню экосистемы — в самом верху страницы -->
-<script src="https://prog815.github.io/common-menu/menu.js"></script>
-<common-projects-menu></common-projects-menu>
+  <script src="https://prog815.github.io/common-menu/menu.js?v=3.0.0"></script>
+  <common-projects-menu></common-projects-menu>
 
-<div class="wrap">
+  <script src="https://prog815.github.io/common-menu/share.js?v=1.0.0"></script>
 
-  <header>
-    <h1>🏢 Интерактивный справочник ОКВЭД2</h1>
-    <p class="sub">Общероссийский классификатор видов экономической деятельности (ОК 029-2014, КДЕС Ред. 2).
-      Используется при регистрации юридических лиц и ИП, основан на европейской классификации NACE Rev. 2.</p>
-  </header>
+  <div class="page" id="top">
+    <header class="hero">
+      <h1>🏢 Интерактивный справочник ОКВЭД2</h1>
+      <p class="lead">
+        Общероссийский классификатор видов экономической деятельности (ОК 029-2014, КДЕС Ред. 2).
+        Используется при регистрации юридических лиц и ИП, основан на европейской классификации NACE Rev. 2.
+      </p>
+    </header>
 
-  <div class="info-line" id="dataInfo">В справочнике <b>3102</b> записи. Данные обновлены <b>1 октября 2026</b> — официальный источник: <a href="https://rosstat.gov.ru/classification" target="_blank" rel="noopener">Росстат</a>.</div>
+    <section class="search-panel" aria-label="Поиск по справочнику ОКВЭД2">
+      <div class="search-row">
+        <div class="search-wrap">
+          <input
+            id="q"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Введите код (01.11) или название (кафе ресторан)…"
+            aria-label="Поисковый запрос"
+            title="Поиск по коду (с начала кода) или по названию"
+          >
+          <button id="clearQ" class="clear-q" type="button" title="Очистить поиск" aria-label="Очистить поиск" hidden>✕</button>
+        </div>
+        <div class="filter-wrap">
+          <select id="sectionFilter" aria-label="Фильтр по разделу" title="Фильтр по разделу ОКВЭД2">
+            <option value="">Все разделы</option>
+          </select>
+        </div>
+      </div>
 
-  <div class="search-sticky">
-    <input id="searchBox" type="search" placeholder="Код (01.11) или название (кафе ресторан)…" autocomplete="off" disabled aria-label="Поиск по справочнику ОКВЭД2">
-    <div class="hint">Поиск запустится автоматически при вводе.</div>
-    <div class="chips">Популярные запросы:
-      <button class="chip" data-q="кафе">кафе</button>
-      <button class="chip" data-q="строительство">строительство</button>
-      <button class="chip" data-q="перевозки">перевозки</button>
-      <button class="chip" data-q="розничная торговля">розничная торговля</button>
-    </div>
+      <p class="hint">
+        Поиск по коду выполняется с начала кода. Поиск по названию поддерживается по нескольким словам.
+        Кликните по коду, чтобы скопировать его.
+      </p>
+
+      <div class="status" id="found" aria-live="polite">Загрузка данных…</div>
+    </section>
+
+    <main>
+      <div id="results" class="cards" aria-live="polite"></div>
+
+      <div id="empty" class="empty" hidden>
+        Ничего не найдено. Попробуйте изменить запрос.
+      </div>
+
+      <div class="more-wrap">
+        <button id="loadMore" class="btn" type="button" title="Показать следующие записи" hidden>Показать ещё</button>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div id="stats" class="stats">Загрузка статистики…</div>
+      <div id="dateLine" class="date-line"></div>
+
+      <div class="sources">
+        <div class="sources-row" id="sourcesSecondary"></div>
+      </div>
+
+      <div class="disclaimer">
+        Справочник носит справочный характер, не заменяет первоисточник и не является официальным реестром.
+      </div>
+    </footer>
   </div>
 
-  <div id="counter"></div>
-  <div id="results" aria-live="polite"></div>
-  <div class="status" id="emptyHint">Введите код или название вида деятельности — результаты появятся мгновенно.</div>
-  <div class="status" id="status">⏳ Загрузка справочника…</div>
-  <button class="more" id="moreBtn" hidden>Показать ещё (<span id="moreLeft">0</span>)</button>
-
-  <div class="howto">
-    <h3>📋 Как пользоваться справочником</h3>
-    <ul>
-      <li><b>Поиск по коду:</b> введите код полностью (56.10) или частично (56).</li>
-      <li><b>Поиск по названию:</b> введите одно или несколько слов (кафе ресторан) — подойдут все слова сразу.</li>
-      <li><b>Копирование:</b> кликните на код — он скопируется в буфер обмена.</li>
-      <li><b>Описания:</b> кнопка «Подробнее» раскрывает состав группировки «Эта группировка включает…».</li>
-      <li><b>Навигация:</b> меню вверху страницы ведёт к другим справочникам.</li>
-    </ul>
+  <div class="fab-stack" aria-hidden="false">
+    <button id="toTop" class="fab" type="button" title="Наверх" aria-label="Наверх">↑</button>
+    <button id="toBottom" class="fab" type="button" title="Вниз" aria-label="Вниз">↓</button>
   </div>
 
-  <footer>
-    Данные актуальны на <span id="footerDate">1 октября 2026</span>. Проект с открытым исходным кодом на
-    <a href="https://github.com/prog815/okved2" target="_blank" rel="noopener">GitHub</a>.<br>
-    Официальные источники:
-    <a href="https://rosstat.gov.ru/classification" target="_blank" rel="noopener">Росстат</a> •
-    <a href="https://www.consultant.ru/document/cons_doc_LAW_163320/" target="_blank" rel="noopener">КонсультантПлюс</a> •
-    <a href="https://base.garant.ru/70650726/" target="_blank" rel="noopener">ГАРАНТ</a>
-  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-</div>
-<div id="toast" role="status"></div>
+  <script>
+    (() => {
+      'use strict';
 
-<script>
-(function(){
-'use strict';
-/* ============================================================
-   Справочник ОКВЭД2 v2 — монолитный интерфейс.
-   Данные: okved2.json.gz (основной, через DecompressionStream)
-   с fallback на okved2.json. Метаданные: okved2_meta.json.
-   Размер страницы пагинации: 50 записей.
-   ============================================================ */
-var DATA_URL_GZ='okved2.json.gz', DATA_URL='okved2.json', META_URL='okved2_meta.json';
-var ROSSTAT_URL='https://rosstat.gov.ru/classification';
-var PAGE=50;
-var LEVELS={0:'раздел',2:'класс',3:'подкласс',4:'группа',5:'подгруппа',6:'вид'};
-/* Синонимы: внутри группы — ИЛИ, между словами запроса — И */
-var SYNONYMS={
-  'кафе':['кафе','ресторан','общественного питания'],
-  'ресторан':['ресторан','кафе'],
-  'перевозки':['перевоз','транспорт','груз'],
-  'перевозка':['перевоз','транспорт','груз'],
-  'строительство':['строитель','монтаж'],
-  'торговля':['торговл'],
-  'розничная':['розничн'],
-  'оптовая':['оптов'],
-  'производство':['производ','изготовлен']
-};
-var DATA=[], SECTION_NAMES={}, currentResults=[], currentTerms=[], mode='', rendered=0;
+      const PAGE_SIZE = 20;
+      const LEVELS = {0:'раздел',2:'класс',3:'подкласс',4:'группа',5:'подгруппа',6:'вид'};
+      
+      const SYNONYMS = {
+        'кафе':['кафе','ресторан','общественного питания'],
+        'ресторан':['ресторан','кафе'],
+        'перевозки':['перевоз','транспорт','груз'],
+        'перевозка':['перевоз','транспорт','груз'],
+        'строительство':['строитель','монтаж'],
+        'торговля':['торговл'],
+        'розничная':['розничн'],
+        'оптовая':['оптов'],
+        'производство':['производ','изготовлен']
+      };
 
-function $(s){return document.querySelector(s);}
-function norm(s){return (s||'').toLowerCase().replace(/ё/g,'е');}
-function esc(s){return String(s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
-function escReg(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
-function plural(n,f){var m10=n%10,m100=n%100;
-  if(m10===1&&m100!==11)return f[0];
-  if(m10>=2&&m10<=4&&(m100<12||m100>14))return f[1];
-  return f[2];}
+      const DEFAULT_SOURCES = [
+        { name: 'Росстат', url: 'https://rosstat.gov.ru/classification', role: 'secondary' },
+        { name: 'КонсультантПлюс', url: 'https://www.consultant.ru/document/cons_doc_LAW_163320/', role: 'secondary' },
+        { name: 'ГАРАНТ', url: 'https://base.garant.ru/70650726/', role: 'secondary' },
+        { name: 'Кодекс', url: 'https://docs.cntd.ru/document/1200116655', role: 'secondary' }
+      ];
 
-/* ---------- загрузка данных ---------- */
-function loadData(){
-  if(typeof DecompressionStream!=='undefined'){
-    return fetch(DATA_URL_GZ,{cache:'no-cache'}).then(function(r){
-      if(!r.ok||!r.body)throw new Error('gz HTTP');
-      var text=new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
-      return text.then(function(t){return JSON.parse(t);});
-    }).catch(function(e){
-      console.warn('gzip недоступен, fallback на json:',e);
-      return fetch(DATA_URL,{cache:'no-cache'}).then(function(r){return r.json();});
-    });
-  }
-  return fetch(DATA_URL,{cache:'no-cache'}).then(function(r){return r.json();});
-}
-function loadMeta(){
-  return fetch(META_URL,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-        .catch(function(){return null;});
-}
+      const els = {
+        q: document.getElementById('q'),
+        clearQ: document.getElementById('clearQ'),
+        sectionFilter: document.getElementById('sectionFilter'),
+        found: document.getElementById('found'),
+        results: document.getElementById('results'),
+        empty: document.getElementById('empty'),
+        loadMore: document.getElementById('loadMore'),
+        stats: document.getElementById('stats'),
+        dateLine: document.getElementById('dateLine'),
+        sourcesSecondary: document.getElementById('sourcesSecondary'),
+        toTop: document.getElementById('toTop'),
+        toBottom: document.getElementById('toBottom'),
+        toast: document.getElementById('toast')
+      };
 
-/* ---------- поиск ---------- */
-function doSearch(raw){
-  var q=norm(raw).trim();
-  if(!q)return{results:[],mode:'empty'};
-  if(/^[\d\s.]+$/.test(q)&&/\d/.test(q)){                 /* префиксный по коду */
-    var qd=q.replace(/\D/g,'');
-    return{results:DATA.filter(function(r){return r.v>0&&r.c.replace(/\D/g,'').indexOf(qd)===0;}),mode:'code',qd:qd};
-  }
-  var tokens=q.split(/\s+/).filter(Boolean);              /* по названию: И между словами */
-  var groups=tokens.map(function(t){return SYNONYMS[t]||[t];});
-  var res=DATA.filter(function(r){
-    var n=norm(r.n);
-    return groups.every(function(g){return g.some(function(v){return n.indexOf(norm(v))!==-1;});});
-  });
-  var terms=[];groups.forEach(function(g){g.forEach(function(v){terms.push(norm(v));});});
-  return{results:res,mode:'name',terms:terms};
-}
-function highlight(text,terms){
-  var out=esc(text);
-  terms.forEach(function(t){
-    if(!t)return;
-    out=out.replace(new RegExp('('+escReg(esc(t))+')','gi'),'<mark>$1</mark>');
-  });
-  return out;
-}
+      let allData = [];
+      let filtered = [];
+      let visibleCount = 0;
+      let isLoading = true;
+      let meta = null;
+      let toastTimer = null;
+      let searchTimer = null;
+      let activeDeepLinkCode = null;
 
-/* ---------- рендер ---------- */
-function cardHTML(r){
-  var badges='<span class="badge">'+(LEVELS[r.v]||'')+'</span>'+
-             (r.v>0?'<span class="badge sec">раздел '+esc(r.s)+'</span>':'');
-  var codeHtml=esc(r.c), nameHtml;
-  if(mode==='code'){
-    var raw=$('#searchBox').value.trim();
-    if(raw&&r.c.indexOf(raw)===0)codeHtml='<mark>'+esc(raw)+'</mark>'+esc(r.c.slice(raw.length));
-    nameHtml=esc(r.n);
-  }else{
-    nameHtml=highlight(r.n,currentTerms);
-  }
-  var descBtn=r.d?'<div><button class="desc-toggle">📖 Подробнее</button></div>':'';
-  var desc=r.d?'<div class="desc" hidden><div class="desc-text">'+esc(r.d)+'</div></div>':'';
-  return '<div class="card"><div class="row">'+
-         '<button class="code" data-code="'+esc(r.c)+'" title="Скопировать код">'+codeHtml+'</button>'+
-         '<span>'+badges+'</span></div>'+
-         '<div class="name">'+nameHtml+'</div>'+descBtn+desc+'</div>';
-}
-function appendPage(){
-  var slice=currentResults.slice(rendered,rendered+PAGE);
-  $('#results').insertAdjacentHTML('beforeend',slice.map(cardHTML).join(''));
-  rendered+=slice.length;
-  $('#moreBtn').hidden=rendered>=currentResults.length;
-  $('#moreLeft').textContent=currentResults.length-rendered;
-}
-function runSearch(q){
-  var out=doSearch(q);
-  mode=out.mode;currentTerms=out.terms||[];currentResults=out.results||[];rendered=0;
-  $('#results').innerHTML='';
-  if(mode==='empty'){$('#counter').textContent='';$('#moreBtn').hidden=true;$('#emptyHint').hidden=false;return;}
-  $('#emptyHint').hidden=true;
-  $('#counter').textContent='Найдено: '+currentResults.length+' '+(mode==='code'?'по коду':'по названию');
-  appendPage();
-}
+      // ---------- утилиты ----------
 
-/* ---------- копирование и тост ---------- */
-var toastTimer=null;
-function toast(msg){var el=$('#toast');el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},1500);}
-function fallbackCopy(text,done){var ta=document.createElement('textarea');ta.value=text;
-  document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}
-  document.body.removeChild(ta);done();}
-function copyCode(code){var done=function(){toast('Код '+code+' скопирован');};
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(code).then(done).catch(function(){fallbackCopy(code,done);});
-  }else fallbackCopy(code,done);}
+      function plural(n, forms) {
+        const abs = Math.abs(n) % 100;
+        const n1 = abs % 10;
+        if (abs > 10 && abs < 20) return forms[2];
+        if (n1 > 1 && n1 < 5) return forms[1];
+        if (n1 === 1) return forms[0];
+        return forms[2];
+      }
 
-/* ---------- события ---------- */
-$('#results').addEventListener('click',function(e){
-  var codeBtn=e.target.closest('.code');
-  if(codeBtn){copyCode(codeBtn.getAttribute('data-code'));return;}
-  var t=e.target.closest('.desc-toggle');
-  if(t){
-    var desc=t.closest('.card').querySelector('.desc');
-    var open=desc.hasAttribute('hidden');
-    if(open)desc.removeAttribute('hidden');else desc.setAttribute('hidden','');
-    t.textContent=open?'📖 Свернуть':'📖 Подробнее';
-  }
-});
-var input=$('#searchBox'),deb=null;
-input.addEventListener('input',function(){clearTimeout(deb);deb=setTimeout(function(){runSearch(input.value);},200);});
-Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(ch){
-  ch.addEventListener('click',function(){input.value=ch.getAttribute('data-q');runSearch(input.value);input.focus();});
-});
-$('#moreBtn').addEventListener('click',appendPage);
+      function formatNumber(n) {
+        return Number(n || 0).toLocaleString('ru-RU');
+      }
 
-/* ---------- старт ---------- */
-loadData().then(function(data){
-  DATA=data;
-  DATA.forEach(function(r){if(r.v===0)SECTION_NAMES[r.c]=r.n;});
-  return loadMeta();
-}).then(function(meta){
-  if(meta){
-    $('#dataInfo').innerHTML='В справочнике <b>'+meta.records_count+'</b> '+
-      plural(meta.records_count,['запись','записи','записей'])+
-      '. Данные обновлены <b>'+esc(meta.source_date_display)+'</b> — официальный источник: '+
-      '<a href="'+ROSSTAT_URL+'" target="_blank" rel="noopener">Росстат</a>.';
-    $('#footerDate').textContent=meta.source_date_display;
-  }
-  $('#status').hidden=true;
-  input.disabled=false;
-  input.focus();
-}).catch(function(e){
-  console.error(e);
-  $('#status').textContent='Не удалось загрузить данные справочника. Попробуйте обновить страницу.';
-});
-})();
-</script>
+      function escapeHtml(value) {
+        return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function escapeRegExp(value) {
+        return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function normalize(value) {
+        return String(value ?? '')
+          .toLowerCase()
+          .replace(/ё/g, 'е')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function onlyDigits(value) {
+        return String(value ?? '').replace(/\D/g, '');
+      }
+
+      function isNumericTerm(term) {
+        return /^[0-9.]+$/.test(term);
+      }
+
+      function prepareItem(item) {
+        const code = String(item.c ?? '');
+        const name = String(item.n ?? '');
+        const level = Number(item.v ?? onlyDigits(code).length);
+        const leaf = Number(item.l) === 1 ? 1 : 0;
+        
+        return {
+          ...item,
+          c: code, n: name, v: level, l: leaf,
+          _n: normalize(name),
+          _cd: onlyDigits(code)
+        };
+      }
+
+      // ---------- подсветка ----------
+
+      function buildHighlightPatterns(terms) {
+        const patterns = new Set();
+        for (const term of terms) {
+          if (!term) continue;
+          const add = v => { if (v) patterns.add(escapeRegExp(v)); };
+          add(term);
+          if (term.includes('е')) add(term.replace(/е/g, 'ё'));
+          if (term.includes('ё')) add(term.replace(/ё/g, 'е'));
+        }
+        return Array.from(patterns).sort((a, b) => b.length - a.length);
+      }
+
+      function highlight(text, terms) {
+        const html = escapeHtml(text);
+        const patterns = buildHighlightPatterns(terms || []);
+        if (!patterns.length) return html;
+        const re = new RegExp(`(${patterns.join('|')})`, 'gi');
+        return html.replace(re, '<mark>$1</mark>');
+      }
+
+      function getCurrentTerms() {
+        const q = normalize(els.q.value);
+        return q ? q.split(' ').filter(Boolean) : [];
+      }
+
+      // ---------- фильтрация ----------
+
+      function filterData() {
+        if (activeDeepLinkCode) {
+          const match = allData.find(item => item.c === activeDeepLinkCode);
+          filtered = match ? [match] : [];
+          return;
+        }
+
+        const terms = getCurrentTerms();
+        const section = els.sectionFilter.value;
+
+        let pool = allData;
+        if (section) {
+          pool = pool.filter(item => item.s === section);
+        }
+
+        if (!terms.length) {
+          // Если поиска нет, показываем всё (или всё в выбранном разделе)
+          filtered = pool.slice();
+          return;
+        }
+
+        const result = [];
+        for (const item of pool) {
+          let ok = true;
+          let score = 0;
+
+          for (const term of terms) {
+            let matched = false;
+            let matchTerms = SYNONYMS[term] || [term];
+
+            if (isNumericTerm(term)) {
+              const digitsTerm = onlyDigits(term);
+              if (digitsTerm && item._cd.startsWith(digitsTerm)) {
+                matched = true;
+                score += 1000;
+              }
+            } else {
+              // Ищем по синонимам
+              for (const mt of matchTerms) {
+                if (item._n.includes(mt)) {
+                  matched = true;
+                  score += item._n.startsWith(mt) ? 120 : 55;
+                  break;
+                }
+              }
+            }
+            if (!matched) { ok = false; break; }
+          }
+          if (ok) result.push({ item, score });
+        }
+
+        result.sort((a, b) => b.score - a.score);
+        filtered = result.map(e => e.item);
+      }
+
+      // ---------- URL / ?code= ----------
+
+      function getCodeFromUrl() {
+        const params = new URLSearchParams(location.search);
+        const code = params.get('code');
+        return code ? code.trim() : null;
+      }
+
+      function syncCodeToUrl(code) {
+        if (!code) {
+          history.replaceState(null, '', location.pathname + location.hash);
+          return;
+        }
+        history.replaceState(null, '', location.pathname + '?code=' + encodeURIComponent(code) + location.hash);
+      }
+
+      function clearCodeFromUrl() {
+        if (location.search.includes('code=')) {
+          history.replaceState(null, '', location.pathname + location.hash);
+        }
+      }
+
+      // ---------- рендер карточки ----------
+
+      function buildRowText(item) {
+        return `${item.c}; ${item.n}`;
+      }
+
+      function createCard(item, terms) {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.dataset.code = item.c;
+
+        const top = document.createElement('div');
+        top.className = 'card-top';
+
+        const codeBtn = document.createElement('button');
+        codeBtn.type = 'button';
+        codeBtn.className = 'code-btn';
+        codeBtn.title = 'Скопировать код';
+        codeBtn.dataset.code = item.c;
+        codeBtn.innerHTML = highlight(item.c, terms);
+
+        const badges = document.createElement('div');
+        badges.className = 'badges';
+
+        // Бейдж уровня
+        if (item.v === 0) {
+          const lvlBadge = document.createElement('span');
+          lvlBadge.className = 'badge lvl';
+          lvlBadge.textContent = 'раздел';
+          badges.appendChild(lvlBadge);
+        } else {
+          const lvlBadge = document.createElement('span');
+          lvlBadge.className = 'badge lvl';
+          lvlBadge.textContent = LEVELS[item.v] || '';
+          badges.appendChild(lvlBadge);
+
+          // Бейдж раздела (кликабельный)
+          if (item.s) {
+            const secBadge = document.createElement('span');
+            secBadge.className = 'badge sec clickable';
+            secBadge.textContent = 'раздел ' + item.s;
+            secBadge.title = 'Клик — показать только раздел ' + item.s;
+            secBadge.addEventListener('click', () => {
+              els.sectionFilter.value = item.s;
+              applySearch();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            badges.appendChild(secBadge);
+          }
+        }
+
+        top.append(codeBtn, badges);
+
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.innerHTML = highlight(item.n, terms);
+
+        card.append(top, name);
+
+        // Описание (если есть)
+        if (item.d) {
+          const descWrap = document.createElement('div');
+          const descBtn = document.createElement('button');
+          descBtn.className = 'desc-toggle';
+          descBtn.innerHTML = '📖 Подробнее';
+          
+          const descDiv = document.createElement('div');
+          descDiv.className = 'desc-text';
+          descDiv.hidden = true;
+          descDiv.textContent = item.d;
+
+          descBtn.addEventListener('click', () => {
+            const isHidden = descDiv.hidden;
+            descDiv.hidden = !isHidden;
+            descBtn.innerHTML = isHidden ? '📖 Свернуть' : '📖 Подробнее';
+          });
+
+          descWrap.append(descBtn, descDiv);
+          card.appendChild(descWrap);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        const rowBtn = document.createElement('button');
+        rowBtn.type = 'button';
+        rowBtn.className = 'btn-small';
+        rowBtn.title = 'Скопировать строку: код; название';
+        rowBtn.innerHTML = '📋 строка';
+        rowBtn.addEventListener('click', async () => {
+          const ok = await copyText(buildRowText(item));
+          showToast(ok ? 'Строка скопирована' : 'Не удалось скопировать строку');
+        });
+        actions.appendChild(rowBtn);
+
+        const shareSlot = document.createElement('span');
+        shareSlot.className = 'share-slot';
+        shareSlot.dataset.code = item.c;
+        shareSlot.dataset.name = item.n;
+        shareSlot.dataset.row = buildRowText(item);
+        actions.appendChild(shareSlot);
+
+        card.appendChild(actions);
+        return card;
+      }
+
+      function bindShareButtons() {
+        const slots = els.results.querySelectorAll('.share-slot');
+        slots.forEach(slot => {
+          const code = slot.dataset.code || '';
+          const name = slot.dataset.name || '';
+          const rowText = slot.dataset.row || '';
+
+          const wrap = document.createElement('klassik-share');
+          wrap.setAttribute('catalog', 'okved2'); // <-- Каталог ОКВЭД2
+          wrap.setAttribute('title', `ОКВЭД2: ${code} — ${name}`);
+          wrap.setAttribute('text', rowText);
+          wrap.setAttribute('url', location.origin + location.pathname + '?code=' + encodeURIComponent(code));
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-small';
+          btn.title = 'Поделиться карточкой';
+          btn.innerHTML = '📤 Поделиться';
+          wrap.appendChild(btn);
+
+          slot.parentNode.replaceChild(wrap, slot);
+        });
+      }
+
+      function appendItems(items) {
+        if (!items.length) return;
+        const terms = getCurrentTerms();
+        const frag = document.createDocumentFragment();
+        for (const item of items) frag.appendChild(createCard(item, terms));
+        els.results.appendChild(frag);
+        bindShareButtons(); // Важно: привязываем share после добавления
+      }
+
+      function updateLoadMore() {
+        const total = filtered.length;
+        const shown = visibleCount;
+        const remaining = total - shown;
+
+        if (remaining <= 0) {
+          els.loadMore.hidden = true;
+          return;
+        }
+        const next = Math.min(PAGE_SIZE, remaining);
+        els.loadMore.hidden = false;
+        els.loadMore.textContent = `Показать ещё +${next} (показано ${formatNumber(shown)} из ${formatNumber(total)})`;
+      }
+
+      function updateStatus() {
+        if (isLoading) {
+          els.found.textContent = 'Загрузка данных…';
+          return;
+        }
+        const n = filtered.length;
+        const m = Math.min(visibleCount, n);
+        els.found.textContent = `Найдено: ${formatNumber(n)} · Показано: ${formatNumber(m)}`;
+      }
+
+      function renderAll() {
+        if (isLoading) return;
+        els.results.innerHTML = '';
+
+        if (!filtered.length) {
+          els.empty.hidden = false;
+          if (activeDeepLinkCode) {
+            els.empty.innerHTML = `<strong>Код ${escapeHtml(activeDeepLinkCode)} не найден</strong><br>Проверьте код или начните вводить новый запрос.`;
+          } else {
+            els.empty.innerHTML = '<strong>Ничего не найдено</strong><br>Попробуйте другой запрос или смените раздел.';
+          }
+          els.loadMore.hidden = true;
+          visibleCount = 0;
+          return;
+        }
+
+        els.empty.hidden = true;
+        visibleCount = Math.min(PAGE_SIZE, filtered.length);
+        appendItems(filtered.slice(0, visibleCount));
+        updateLoadMore();
+      }
+
+      function applySearch() {
+        filterData();
+        renderAll();
+        updateStatus();
+      }
+
+      function highlightCode(code) {
+        requestAnimationFrame(() => {
+          const card = els.results.querySelector(`.card[data-code="${CSS.escape(code)}"]`);
+          if (!card) return;
+          card.classList.add('highlight');
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => card.classList.remove('highlight'), 1800);
+        });
+      }
+
+      // ---------- футер / даты ----------
+
+      function mergeSources(metaSources) {
+        const byUrl = new Map(DEFAULT_SOURCES.map(s => [s.url, s]));
+        if (Array.isArray(metaSources)) {
+          for (const s of metaSources) {
+            if (s && s.url && s.role !== 'primary' && !byUrl.has(s.url)) {
+              byUrl.set(s.url, s);
+            }
+          }
+        }
+        return Array.from(byUrl.values());
+      }
+
+      function linkFor(s) {
+        const a = document.createElement('a');
+        a.href = s.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = s.name;
+        a.title = s.name;
+        return a;
+      }
+
+      function renderFooter() {
+        const sources = mergeSources(meta?.primary_sources);
+
+        els.sourcesSecondary.innerHTML = '<span class="sources-label">Первоисточники и текстовые редакции для сверки:</span>';
+        for (const s of sources) els.sourcesSecondary.appendChild(linkFor(s));
+
+        const aboutLink = document.createElement('a');
+        aboutLink.href = 'https://github.com/prog815/okved2';
+        aboutLink.target = '_blank';
+        aboutLink.rel = 'noopener noreferrer';
+        aboutLink.textContent = 'О справочнике';
+        aboutLink.title = 'О справочнике (репозиторий проекта)';
+        els.sourcesSecondary.appendChild(aboutLink);
+      }
+
+      function renderDateLine() {
+        if (!meta) {
+          els.dateLine.textContent = 'Дата актуальности: не определена';
+          return;
+        }
+        if (meta.change_display) {
+          els.dateLine.textContent = meta.change_display;
+        } else if (meta.source_date_display) {
+          els.dateLine.textContent = 'С изменениями от ' + meta.source_date_display;
+        } else {
+          els.dateLine.textContent = 'Дата актуальности: не определена';
+        }
+      }
+
+      function updateStats() {
+        const total = allData.length;
+        const leaf = allData.reduce((acc, item) => acc + (item.l === 1 ? 1 : 0), 0);
+        els.stats.innerHTML =
+          `В справочнике <b>${formatNumber(total)}</b> ${plural(total, ['запись', 'записи', 'записей'])}, ` +
+          `из них <b>${formatNumber(leaf)}</b> ${plural(leaf, ['код', 'кода', 'кодов'])} нижнего уровня.`;
+      }
+
+      // ---------- служебное ----------
+
+      function showToast(message) {
+        clearTimeout(toastTimer);
+        els.toast.textContent = message;
+        els.toast.classList.add('show');
+        toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
+      }
+
+      async function copyText(text) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+        } catch (_) {}
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      async function fetchJson(url) {
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+        return r.json();
+      }
+
+      async function fetchGzipJson(url) {
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+        if (typeof DecompressionStream === 'undefined' || !r.body) {
+          throw new Error('DecompressionStream is not available');
+        }
+        const stream = r.body.pipeThrough(new DecompressionStream('gzip'));
+        const reader = stream.getReader();
+        const chunks = [];
+        let len = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          len += value.length;
+        }
+        const buf = new Uint8Array(len);
+        let off = 0;
+        for (const c of chunks) { buf.set(c, off); off += c.length; }
+        const text = new TextDecoder('utf-8').decode(buf);
+        return JSON.parse(text);
+      }
+
+      async function loadData() {
+        try { return await fetchGzipJson('okved2.json.gz'); }
+        catch (_) { return await fetchJson('okved2.json'); }
+      }
+
+      async function loadMeta() {
+        try { return await fetchGzipJson('okved2_meta.json.gz'); }
+        catch (_) { return await fetchJson('okved2_meta.json'); }
+      }
+
+      function setLoading(message) {
+        isLoading = true;
+        els.found.textContent = message || 'Загрузка данных…';
+        els.results.innerHTML = '';
+        els.empty.hidden = true;
+        els.loadMore.hidden = true;
+      }
+
+      function showError(message) {
+        isLoading = false;
+        els.found.textContent = 'Ошибка загрузки';
+        els.results.innerHTML = '';
+        els.loadMore.hidden = true;
+        els.empty.hidden = false;
+        els.empty.innerHTML = `<strong>Не удалось загрузить справочник</strong><br>${escapeHtml(message || 'Проверьте соединение и обновите страницу.')}`;
+      }
+
+      function toggleFloatingButtons() {
+        const y = window.scrollY || document.documentElement.scrollTop || 0;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        els.toTop.classList.toggle('visible', y > 300);
+        els.toBottom.classList.toggle('visible', maxScroll - y > 300);
+      }
+
+      function updateClearButton() {
+        els.clearQ.hidden = !els.q.value;
+      }
+
+      // ---------- события ----------
+
+      function bindEvents() {
+        els.q.addEventListener('input', () => {
+          activeDeepLinkCode = null;
+          clearCodeFromUrl();
+          updateClearButton();
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(applySearch, 200);
+        });
+
+        els.clearQ.addEventListener('click', () => {
+          els.q.value = '';
+          activeDeepLinkCode = null;
+          clearCodeFromUrl();
+          updateClearButton();
+          els.q.focus();
+          applySearch();
+        });
+
+        els.sectionFilter.addEventListener('change', () => {
+          activeDeepLinkCode = null;
+          clearCodeFromUrl();
+          applySearch();
+        });
+
+        els.loadMore.addEventListener('click', () => {
+          const oldVisible = visibleCount;
+          visibleCount = Math.min(filtered.length, visibleCount + PAGE_SIZE);
+          appendItems(filtered.slice(oldVisible, visibleCount));
+          updateLoadMore();
+          updateStatus();
+        });
+
+        els.results.addEventListener('click', async (event) => {
+          const btn = event.target.closest('.code-btn');
+          if (!btn) return;
+          const code = btn.dataset.code || '';
+          const copied = await copyText(code);
+          syncCodeToUrl(code);
+          if (copied) {
+            showToast(`Код ${code} скопирован`);
+          } else {
+            showToast('Не удалось скопировать код');
+          }
+        });
+
+        els.toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        els.toBottom.addEventListener('click', () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }));
+
+        window.addEventListener('scroll', toggleFloatingButtons, { passive: true });
+        window.addEventListener('resize', toggleFloatingButtons);
+
+        window.addEventListener('popstate', () => {
+          const code = getCodeFromUrl();
+          if (code) {
+            activeDeepLinkCode = code;
+            els.q.value = code;
+            updateClearButton();
+            applySearch();
+            highlightCode(code);
+          } else {
+            activeDeepLinkCode = null;
+            els.q.value = '';
+            updateClearButton();
+            applySearch();
+          }
+        });
+      }
+
+      // ---------- init ----------
+
+      async function init() {
+        setLoading('Загрузка данных…');
+        bindEvents();
+        toggleFloatingButtons();
+        updateClearButton();
+
+        const initialCode = getCodeFromUrl();
+        if (initialCode) {
+          activeDeepLinkCode = initialCode;
+          els.q.value = initialCode;
+          updateClearButton();
+        }
+
+        try {
+          const [rawData, rawMeta] = await Promise.all([
+            loadData(),
+            loadMeta().catch(() => null)
+          ]);
+
+          meta = rawMeta;
+          allData = Array.isArray(rawData) ? rawData.map(prepareItem) : [];
+          
+          // Строим селект разделов из метаданных
+          if (meta && meta.sections && meta.sections.length) {
+            meta.sections.forEach(s => {
+              const opt = document.createElement('option');
+              opt.value = s.c;
+              opt.textContent = `${s.c} — ${s.n}`;
+              els.sectionFilter.appendChild(opt);
+            });
+          }
+
+          isLoading = false;
+          updateStats();
+          renderFooter();
+          renderDateLine();
+          
+          // Запускаем поиск (показывает первые 20 карточек сразу)
+          applySearch();
+
+          if (activeDeepLinkCode) {
+            highlightCode(activeDeepLinkCode);
+          }
+        } catch (error) {
+          console.error(error);
+          showError(error?.message || 'Неизвестная ошибка');
+        }
+      }
+
+      init();
+    })();
+  </script>
 </body>
 </html>
