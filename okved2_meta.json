@@ -1,11 +1,172 @@
 {
-  "source_date": "2026-10-01",
-  "source_date_display": "1 октября 2026",
-  "generated_at": "2026-10-23T09:43:41",
-  "version": "2026-10-01",
-  "source_url": "https://rosstat.gov.ru/storage/mediabank/OKVED2.rar",
+  "classifier": "okved2",
   "classifier_name": "ОКВЭД2 (ОК 029-2014)",
+  "classifier_full_name": "Общероссийский классификатор видов экономической деятельности (ОК 029-2014, КДЕС Ред. 2)",
+  "source_type": "rosstat_rar_docx_archive",
+  "source_page": "https://rosstat.gov.ru/classification",
+  "source_url": "https://rosstat.gov.ru/storage/mediabank/OKVED2.rar",
+  "source_filename": "OKVED2.rar",
+  "source_sha256": "841caf62303920a74aa41ddc6324ca9135944bcbbd4e9f8ee7c693ba1496d709",
+  "source_size_bytes": 427487,
+  "fetched_at": "2026-10-25T05:45:04",
+  "source_files": [
+    {
+      "name": "ТИЗ ОКВЭД2.docx",
+      "size_bytes": 435131
+    }
+  ],
+  "source_date": "2026-10-01",
+  "source_date_iso": "2026-10-01",
+  "source_date_display": "1 октября 2026",
+  "change_display": null,
+  "generated_at": "2026-10-25T05:45:08",
+  "generated_date": "2026-10-25",
+  "version": "2026-10-01",
+  "provenance": "Росстат · архив OKVED2.rar от 1 октября 2026",
   "records_count": 3102,
+  "records_count_web": 3102,
   "leaf_count": 2155,
-  "data_hash": "2ad8d245ed7bd93b"
+  "sections_count": 21,
+  "sections": [
+    {
+      "c": "A",
+      "n": "СЕЛЬСКОЕ, ЛЕСНОЕ ХОЗЯЙСТВО, ОХОТА, РЫБОЛОВСТВО И РЫБОВОДСТВО"
+    },
+    {
+      "c": "B",
+      "n": "ДОБЫЧА ПОЛЕЗНЫХ ИСКОПАЕМЫХ"
+    },
+    {
+      "c": "C",
+      "n": "ОБРАБАТЫВАЮЩИЕ ПРОИЗВОДСТВА"
+    },
+    {
+      "c": "D",
+      "n": "ОБЕСПЕЧЕНИЕ ЭЛЕКТРИЧЕСКОЙ ЭНЕРГИЕЙ, ГАЗОМ И ПАРОМ; КОНДИЦИОНИРОВАНИЕ ВОЗДУХА"
+    },
+    {
+      "c": "E",
+      "n": "ВОДОСНАБЖЕНИЕ; ВОДООТВЕДЕНИЕ, ОРГАНИЗАЦИЯ СБОРА И УТИЛИЗАЦИИ ОТХОДОВ, ДЕЯТЕЛЬНОСТЬ ПО ЛИКВИДАЦИИ ЗАГРЯЗНЕНИЙ"
+    },
+    {
+      "c": "F",
+      "n": "СТРОИТЕЛЬСТВО"
+    },
+    {
+      "c": "G",
+      "n": "ТОРГОВЛЯ ОПТОВАЯ И РОЗНИЧНАЯ; РЕМОНТ АВТОТРАНСПОРТНЫХ СРЕДСТВ И МОТОЦИКЛОВ"
+    },
+    {
+      "c": "H",
+      "n": "ТРАНСПОРТИРОВКА И ХРАНЕНИЕ"
+    },
+    {
+      "c": "I",
+      "n": "ДЕЯТЕЛЬНОСТЬ ГОСТИНИЦ И ПРЕДПРИЯТИЙ ОБЩЕСТВЕННОГО ПИТАНИЯ"
+    },
+    {
+      "c": "J",
+      "n": "ДЕЯТЕЛЬНОСТЬ В ОБЛАСТИ ИНФОРМАЦИИ И СВЯЗИ"
+    },
+    {
+      "c": "K",
+      "n": "ДЕЯТЕЛЬНОСТЬ ФИНАНСОВАЯ И СТРАХОВАЯ"
+    },
+    {
+      "c": "L",
+      "n": "ДЕЯТЕЛЬНОСТЬ ПО ОПЕРАЦИЯМ С НЕДВИЖИМЫМ ИМУЩЕСТВОМ"
+    },
+    {
+      "c": "M",
+      "n": "ДЕЯТЕЛЬНОСТЬ ПРОФЕССИОНАЛЬНАЯ, НАУЧНАЯ И ТЕХНИЧЕСКАЯ"
+    },
+    {
+      "c": "N",
+      "n": "ДЕЯТЕЛЬНОСТЬ АДМИНИСТРАТИВНАЯ И СОПУТСТВУЮЩИЕ ДОПОЛНИТЕЛЬНЫЕ УСЛУГИ"
+    },
+    {
+      "c": "O",
+      "n": "ГОСУДАРСТВЕННОЕ УПРАВЛЕНИЕ И ОБЕСПЕЧЕНИЕ ВОЕННОЙ БЕЗОПАСНОСТИ; СОЦИАЛЬНОЕ ОБЕСПЕЧЕНИЕ"
+    },
+    {
+      "c": "P",
+      "n": "ОБРАЗОВАНИЕ"
+    },
+    {
+      "c": "Q",
+      "n": "ДЕЯТЕЛЬНОСТЬ В ОБЛАСТИ ЗДРАВООХРАНЕНИЯ И СОЦИАЛЬНЫХ УСЛУГ"
+    },
+    {
+      "c": "R",
+      "n": "ДЕЯТЕЛЬНОСТЬ В ОБЛАСТИ КУЛЬТУРЫ, СПОРТА, ОРГАНИЗАЦИИ ДОСУГА И РАЗВЛЕЧЕНИЙ"
+    },
+    {
+      "c": "S",
+      "n": "ПРЕДОСТАВЛЕНИЕ ПРОЧИХ ВИДОВ УСЛУГ"
+    },
+    {
+      "c": "T",
+      "n": "ДЕЯТЕЛЬНОСТЬ ДОМАШНИХ ХОЗЯЙСТВ КАК РАБОТОДАТЕЛЕЙ; НЕДИФФЕРЕНЦИРОВАННАЯ ДЕЯТЕЛЬНОСТЬ ЧАСТНЫХ ДОМАШНИХ ХОЗЯЙСТВ ПО ПРОИЗВОДСТВУ ТОВАРОВ И ОКАЗАНИЮ УСЛУГ ДЛЯ СОБСТВЕННОГО ПОТРЕБЛЕНИЯ"
+    },
+    {
+      "c": "U",
+      "n": "ДЕЯТЕЛЬНОСТЬ ЭКСТЕРРИТОРИАЛЬНЫХ ОРГАНИЗАЦИЙ И ОРГАНОВ"
+    }
+  ],
+  "data_hash": "4b6d2899b1755e06",
+  "data_hash_full": "4b6d2899b1755e06b903403439002436969faa00a0e7c4507e42fa0d1531be2a",
+  "json_size_bytes": 1627000,
+  "json_size_kb": 1588.9,
+  "gz_size_bytes": 234667,
+  "gz_size_kb": 229.2,
+  "record_format": "{c,n,l,v,p,s,d?}",
+  "record_format_description": "c — код (для разделов — буква A–U); n — наименование; l — флаг leaf (1/0); v — уровень (0=раздел, 2..6); p — код родителя (для класса — буква раздела); s — буква раздела A–U; d — описание «Эта группировка включает…» (опционально)",
+  "primary_sources": [
+    {
+      "name": "Росстат",
+      "url": "https://rosstat.gov.ru/classification",
+      "role": "primary"
+    },
+    {
+      "name": "КонсультантПлюс",
+      "url": "https://www.consultant.ru/document/cons_doc_LAW_163320/",
+      "role": "secondary"
+    },
+    {
+      "name": "ГАРАНТ",
+      "url": "https://base.garant.ru/70650726/",
+      "role": "secondary"
+    },
+    {
+      "name": "Кодекс",
+      "url": "https://docs.cntd.ru/document/1200116655",
+      "role": "secondary"
+    }
+  ],
+  "publish_allowed": true,
+  "critical_errors": [],
+  "warnings": [],
+  "presence_guard": {
+    "version": "okved2_v1",
+    "pairs_expected": 88,
+    "pairs_found": 88,
+    "missing_pairs": []
+  },
+  "presence_guard_version": "okved2_v1",
+  "parsed_count": 3102,
+  "declared_count": null,
+  "parsed_vs_declared": "N/A: source does not provide declared_count",
+  "parse_counters": {
+    "total_rows": 4465,
+    "name_had_nbsp": 43,
+    "name_had_replacement": 0,
+    "name_had_control": 0,
+    "name_had_whitespace_collapsed": 1253
+  },
+  "subject_overrides_applied": [],
+  "subject_morphology_normalized": 0,
+  "aliases_source": null,
+  "source_meta_created": null,
+  "source_meta_modified": null,
+  "source_meta_valid_until": null
 }
