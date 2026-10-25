@@ -3,19 +3,15 @@ name: Daily OKVED2 Update
 on:
   schedule:
     - cron: '0 5 * * *'      # 05:00 UTC = 08:00 МСК
-  workflow_dispatch:          # ручной запуск
+  workflow_dispatch:
 
 jobs:
   sync-and-trigger:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      contents: write         # встроенный токен Actions для коммита
+      contents: write
     env:
-      # API-токен Kaggle НОВОГО образца (CLI >= 1.8.0 / kagglehub >= 0.4.1).
-      # Персональный токен этого справочника: не затрагивает другие
-      # справочники и legacy KAGGLE_KEY в okpd2.
-      # kaggle.json не нужен — CLI читает переменную окружения напрямую.
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN_OKVED2 }}
 
     steps:
@@ -28,14 +24,7 @@ jobs:
         run: |
           pip install -q --upgrade kaggle
           kaggle --version
-          python - <<'EOF'
-          import re, subprocess
-          out = subprocess.check_output(["kaggle", "--version"], text=True).strip()
-          m = re.search(r"(\d+)\.(\d+)", out)
-          assert m and tuple(map(int, m.groups())) >= (1, 8), \
-              f"нужен kaggle CLI >= 1.8.0 для API-токенов, получен: {out}"
-          print("OK: kaggle CLI поддерживает API-токены")
-          EOF
+          python -c "import re, subprocess; out = subprocess.check_output(['kaggle','--version'], text=True).strip(); m = re.search(r'(\d+)\.(\d+)', out); assert m and tuple(map(int, m.groups())) >= (1, 8), f'нужен kaggle CLI >= 1.8.0, получен: {out}'; print('OK: kaggle CLI поддерживает API-токены')"
 
       - name: Download latest kernel output
         run: |
@@ -43,38 +32,72 @@ jobs:
           kaggle kernels output eavprog/okved2-classifier-downloader -p ./output
           echo "Содержимое output:"
           find ./output -maxdepth 4 -type f | head -30
-          echo ""
-          echo "--- Попытка показать лог/диагностику тетрадки (если есть) ---"
-          for f in ./output/*.log ./output/*.txt ./output/__notebook*.ipynb; do
-            [ -f "$f" ] && { echo ">>> $f (last 50 lines) >>>"; tail -n 50 "$f"; echo "<<< $f <<<"; echo ""; }
-          done || true
+
+      - name: Determine SRC (авто-детект пути web/)
+        run: |
+          SRC=""
+          for cand in ./output/web ./output/okved2_data/web ./output; do
+            if [ -f "$cand/okved2.json" ]; then
+              SRC="$cand"
+              break
+            fi
+          done
+          if [ -z "$SRC" ]; then
+            echo "::error::okved2.json не найден в ./output/web, ./output/okved2_data/web, ./output"
+            exit 1
+          fi
+          echo "SRC=$SRC" >> "$GITHUB_ENV"
+          echo "✅ SRC=$SRC"
 
       - name: Copy web files to repo root (не падает, ставит флаг)
         id: copy
         run: |
-          # Тетрадка OKVED2 пишет файлы в корень /kaggle/working.
-          # При падении тетрадки output пуст — это достоверный признак сбоя.
-          SRC=./output
           MISSING=0
           for f in okved2.json okved2.json.gz okved2_meta.json okved2_meta.json.gz; do
             if [ -f "$SRC/$f" ]; then
               cp "$SRC/$f" "./$f"
               echo "copied $f"
             else
-              echo "::warning::MISSING $f в output тетрадки (тетрадка, вероятно, упала)"
+              echo "::warning::MISSING $f в $SRC (тетрадка, вероятно, упала)"
               MISSING=$((MISSING+1))
             fi
           done
           if [ "$MISSING" -gt 0 ]; then
-            echo "❌ Отсутствует $MISSING из 4 файлов — коммит пропущен, сайт остаётся на последней хорошей версии"
+            echo "❌ Отсутствует $MISSING из 4 файлов — коммит пропущен"
             echo "FILES_OK=false" >> "$GITHUB_ENV"
           else
             echo "✅ Все 4 файла на месте"
             echo "FILES_OK=true" >> "$GITHUB_ENV"
           fi
 
-      - name: Commit and push changes
+      - name: Determine SOURCE_DATE (одной строкой, цепочкой or)
         if: env.FILES_OK == 'true'
+        run: |
+          SOURCE_DATE=$(python -c "import json; m=json.load(open('okved2_meta.json', encoding='utf-8')); print(m.get('source_date') or m.get('effective_date') or m.get('prepared_date') or (m.get('generated_at') or '')[:10] or '?')")
+          echo "SOURCE_DATE=$SOURCE_DATE" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE=$SOURCE_DATE"
+
+      - name: Check metadata (publish_allowed / critical_errors)
+        if: env.FILES_OK == 'true'
+        run: |
+          python - <<'EOF'
+          import json, sys
+          m = json.load(open('okved2_meta.json', encoding='utf-8'))
+          pa = m.get('publish_allowed')
+          ce = m.get('critical_errors') or []
+          wr = m.get('warnings') or []
+          if pa is not True:
+              print(f"::error::publish_allowed={pa}")
+              sys.exit(1)
+          if ce:
+              print(f"::error::critical_errors={ce}")
+              sys.exit(1)
+          print(f"✓ Мета OK: publish_allowed={pa}, critical_errors={len(ce)}, warnings={len(wr)}")
+          EOF
+          echo "META_OK=true" >> "$GITHUB_ENV"
+
+      - name: Commit and push changes
+        if: env.FILES_OK == 'true' && env.META_OK == 'true'
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "GitHub Actions"
@@ -82,10 +105,9 @@ jobs:
           if git diff --cached --quiet; then
             echo "✅ Изменений нет — данные уже актуальны"
           else
-            SOURCE_DATE=$(python -c "import json;print(json.load(open('okved2_meta.json')).get('source_date','?'))")
-            git commit -m "Auto-update: OKVED2 data from kernel output (source $SOURCE_DATE) [skip ci]"
+            git commit -m "chore(data): auto-update OKVED2 ${SOURCE_DATE}"
             git push
-            echo "✅ Изменения запушены"
+            echo "✅ Изменения запушены (SOURCE_DATE=${SOURCE_DATE})"
           fi
 
       - name: Trigger new notebook run (fire-and-forget, всегда)
