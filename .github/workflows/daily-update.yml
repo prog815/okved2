@@ -1,9 +1,9 @@
-name: Daily OKVED2 Update
+name: Weekly OKVED2 Update
 
 on:
   schedule:
-    - cron: '0 5 * * *'      # 05:00 UTC = 08:00 МСК
-  workflow_dispatch:
+    - cron: '27 6 * * 1'      # 06:27 UTC = 09:27 МСК, понедельник (слот ОКВЭД2 из §3.2)
+  workflow_dispatch:          # ручной запуск
 
 jobs:
   sync-and-trigger:
@@ -12,6 +12,9 @@ jobs:
     permissions:
       contents: write
     env:
+      # Kaggle CLI >= 1.8.0 читает KAGGLE_API_TOKEN напрямую.
+      # В репозитории prog815/okved2 секрет называется KAGGLE_API_TOKEN_OKVED2,
+      # внутри — чистый токен (gha-okved2). Внутри workflow — KAGGLE_API_TOKEN.
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN_OKVED2 }}
 
     steps:
@@ -20,40 +23,51 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Kaggle CLI с поддержкой API-токенов (>= 1.8.0)
+      - name: Install Kaggle CLI (>= 1.8.0)
         run: |
           pip install -q --upgrade kaggle
           kaggle --version
-          python -c "import re, subprocess; out = subprocess.check_output(['kaggle','--version'], text=True).strip(); m = re.search(r'(\d+)\.(\d+)', out); assert m and tuple(map(int, m.groups())) >= (1, 8), f'нужен kaggle CLI >= 1.8.0, получен: {out}'; print('OK: kaggle CLI поддерживает API-токены')"
+          python - <<'EOF'
+          import re, subprocess
+          out = subprocess.check_output(["kaggle", "--version"], text=True).strip()
+          m = re.search(r"(\d+)\.(\d+)", out)
+          assert m and tuple(map(int, m.groups())) >= (1, 8), \
+              f"нужен kaggle CLI >= 1.8.0 для API-токенов, получен: {out}"
+          print("OK: kaggle CLI >= 1.8.0")
+          EOF
 
       - name: Download latest kernel output
         run: |
           mkdir -p ./output
           kaggle kernels output eavprog/okved2-classifier-downloader -p ./output
           echo "Содержимое output:"
-          find ./output -maxdepth 4 -type f | head -30
+          find ./output -maxdepth 4 -type f | head -40
+          echo ""
+          echo "--- диагностика тетрадки (если есть) ---"
+          for f in ./output/okved2_data/final/validation_report.json ./output/okved2_data/diag/okved2_diagnostics.json ./output/*.log ./output/*.txt; do
+            [ -f "$f" ] && { echo ">>> $f (last 50 lines) >>>"; tail -n 50 "$f"; echo "<<< $f <<<"; echo ""; }
+          done || true
 
-      - name: Determine SRC (авто-детект пути web/)
+      - name: Detect SRC and copy web files (.gz only)
+        id: copy
         run: |
+          # Авто-детект по §3.1: okved2_data/web (стандарт) → web (фоллбэк).
+          # Публикуются ТОЛЬКО .gz (fallback .json убран, §2.10).
           SRC=""
-          for cand in ./output/web ./output/okved2_data/web ./output; do
-            if [ -f "$cand/okved2.json" ]; then
+          for cand in "./output/okved2_data/web" "./output/web"; do
+            if [ -f "$cand/okved2.json.gz" ]; then
               SRC="$cand"
               break
             fi
           done
           if [ -z "$SRC" ]; then
-            echo "::error::okved2.json не найден в ./output/web, ./output/okved2_data/web, ./output"
-            exit 1
+            echo "::warning::okved2.json.gz не найден ни в ./output/okved2_data/web, ни в ./output/web"
+            echo "FILES_OK=false" >> "$GITHUB_ENV"
+            exit 0
           fi
-          echo "SRC=$SRC" >> "$GITHUB_ENV"
-          echo "✅ SRC=$SRC"
-
-      - name: Copy web files to repo root (не падает, ставит флаг)
-        id: copy
-        run: |
+          echo "SRC=$SRC"
           MISSING=0
-          for f in okved2.json okved2.json.gz okved2_meta.json okved2_meta.json.gz; do
+          for f in okved2.json.gz okved2_meta.json.gz; do
             if [ -f "$SRC/$f" ]; then
               cp "$SRC/$f" "./$f"
               echo "copied $f"
@@ -63,54 +77,119 @@ jobs:
             fi
           done
           if [ "$MISSING" -gt 0 ]; then
-            echo "❌ Отсутствует $MISSING из 4 файлов — коммит пропущен"
+            echo "❌ Отсутствует $MISSING из 2 .gz файлов — коммит пропущен, сайт остаётся на последней хорошей версии"
             echo "FILES_OK=false" >> "$GITHUB_ENV"
           else
-            echo "✅ Все 4 файла на месте"
+            echo "✅ Оба .gz файла на месте"
             echo "FILES_OK=true" >> "$GITHUB_ENV"
           fi
 
-      - name: Determine SOURCE_DATE (одной строкой, цепочкой or)
-        if: env.FILES_OK == 'true'
-        run: |
-          SOURCE_DATE=$(python -c "import json; m=json.load(open('okved2_meta.json', encoding='utf-8')); print(m.get('source_date') or m.get('effective_date') or m.get('prepared_date') or (m.get('generated_at') or '')[:10] or '?')")
-          echo "SOURCE_DATE=$SOURCE_DATE" >> "$GITHUB_ENV"
-          echo "SOURCE_DATE=$SOURCE_DATE"
-
-      - name: Check metadata (publish_allowed / critical_errors)
+      - name: Check metadata (META_OK)
+        id: meta
         if: env.FILES_OK == 'true'
         run: |
           python - <<'EOF'
-          import json, sys
-          m = json.load(open('okved2_meta.json', encoding='utf-8'))
-          pa = m.get('publish_allowed')
-          ce = m.get('critical_errors') or []
-          wr = m.get('warnings') or []
-          if pa is not True:
-              print(f"::error::publish_allowed={pa}")
-              sys.exit(1)
+          import gzip, hashlib, json, os, re
+
+          with gzip.open("okved2_meta.json.gz", "rt", encoding="utf-8") as f:
+              m = json.load(f)
+
+          ok = True
+          reasons = []
+
+          # 1. publish_allowed
+          if m.get("publish_allowed") is not True:
+              ok = False
+              reasons.append(f"publish_allowed={m.get('publish_allowed')}")
+
+          # 2. critical_errors
+          ce = m.get("critical_errors")
           if ce:
-              print(f"::error::critical_errors={ce}")
-              sys.exit(1)
-          print(f"✓ Мета OK: publish_allowed={pa}, critical_errors={len(ce)}, warnings={len(wr)}")
+              ok = False
+              reasons.append(f"critical_errors={ce}")
+
+          # 3. records_count > 0
+          rc = m.get("records_count")
+          if not isinstance(rc, int) or rc <= 0:
+              ok = False
+              reasons.append(f"records_count={rc}")
+
+          # 4. data_hash_full — 64 hex-символа
+          declared_full = m.get("data_hash_full") or ""
+          declared_short = m.get("data_hash") or ""
+          if not declared_full:
+              ok = False
+              reasons.append("data_hash_full отсутствует в мете")
+          elif not re.fullmatch(r"[0-9a-f]{64}", str(declared_full)):
+              ok = False
+              reasons.append(f"data_hash_full невалидный: {declared_full}")
+
+          # 5. data_hash == data_hash_full[:16] (§3.1) — блокирует
+          if declared_short and declared_full and declared_short != declared_full[:16]:
+              ok = False
+              reasons.append(
+                  f"data_hash != data_hash_full[:16]: short={declared_short} full_prefix={declared_full[:16]}"
+              )
+
+          # 6. Информационная сверка sha256(okved2.json.gz) с data_hash_full — НЕ блокирует.
+          #    Семантика data_hash_full в ОКВЭД2 пока не подтверждена окончательно
+          #    (в OKZ подтвердили и подняли до блокирующей; в остальных — warning).
+          if declared_full:
+              try:
+                  with gzip.open("okved2.json.gz", "rb") as f:
+                      content = f.read()
+                  actual_full = hashlib.sha256(content).hexdigest()
+                  if declared_full == actual_full:
+                      print(f"✓ sha256(okved2.json) == data_hash_full ({actual_full[:16]}…)")
+                  else:
+                      print(f"  ⚠ sha256(okved2.json)={actual_full[:16]}… != data_hash_full={declared_full[:16]}… (информационно, не блокирует)")
+              except Exception as e:
+                  print(f"  ⚠ не удалось сверить sha256(okved2.json): {e}")
+
+          # Информационная статистика для лога
+          print(f"source_date:        {m.get('source_date')}")
+          print(f"source_date_display:{m.get('source_date_display')}")
+          print(f"change_display:     {m.get('change_display')}")
+          print(f"records_count:      {m.get('records_count')}")
+          print(f"records_count_web:  {m.get('records_count_web')}")
+          print(f"leaf_count:         {m.get('leaf_count')}")
+          print(f"sections_count:     {m.get('sections_count')}")
+          print(f"warnings:           {m.get('warnings')}")
+
+          if ok:
+              print("✓ META_OK: publish_allowed=true, critical_errors=[], records_count>0, data_hash == data_hash_full[:16]")
+              with open(os.environ["GITHUB_ENV"], "a") as env:
+                  env.write("META_OK=true\n")
+          else:
+              print("::error::Мета не прошла проверку:")
+              for r in reasons:
+                  print(f"  - {r}")
+              with open(os.environ["GITHUB_ENV"], "a") as env:
+                  env.write("META_OK=false\n")
           EOF
-          echo "META_OK=true" >> "$GITHUB_ENV"
 
       - name: Commit and push changes
         if: env.FILES_OK == 'true' && env.META_OK == 'true'
         run: |
           git config --local user.email "github-actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add okved2.json okved2.json.gz okved2_meta.json okved2_meta.json.gz
+          git add okved2.json.gz okved2_meta.json.gz
           if git diff --cached --quiet; then
             echo "✅ Изменений нет — данные уже актуальны"
           else
-            git commit -m "chore(data): auto-update OKVED2 ${SOURCE_DATE}"
+            # SOURCE_DATE через gzip -d -c | python -c (без heredoc).
+            # Цепочка по §3.1: source_date → effective_date → prepared_date → generated_at → '?'.
+            # ОКВЭД2-специфика: change_display в мете = null (в DOCX Росстата нет машиночитаемого
+            # «Изменение №/YYYY»), поэтому опираемся на source_date из mtime DOCX внутри RAR.
+            # Коммит создаётся ТОЛЬКО при реальном изменении .gz (git diff --cached --quiet),
+            # поэтому нестабильная дата не даёт лишнего шума — коммиты редки и осмысленны.
+            SOURCE_DATE=$(gzip -d -c okved2_meta.json.gz | python -c "import sys, json; m=json.load(sys.stdin); print(m.get('source_date') or m.get('effective_date') or m.get('prepared_date') or m.get('generated_at') or '?')")
+            git commit -m "Auto-update: okved2 data (source ${SOURCE_DATE}) [skip ci]"
             git push
-            echo "✅ Изменения запушены (SOURCE_DATE=${SOURCE_DATE})"
+            echo "✅ Изменения запушены (source=${SOURCE_DATE})"
           fi
 
-      - name: Trigger new notebook run (fire-and-forget, всегда)
+      - name: Trigger new notebook run (fire-and-forget, always)
         if: always()
         run: |
           mkdir -p ./nb
